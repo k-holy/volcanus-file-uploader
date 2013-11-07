@@ -21,7 +21,7 @@ use Volcanus\FileUploader\Exception\UploaderException;
  *
  * @author k.holy74@gmail.com
  */
-class FileValidator
+class FileValidator implements FileValidatorInterface
 {
 
 	private static $imageExtensions = array(
@@ -41,6 +41,84 @@ class FileValidator
 		'wbmp',
 		'xbm',
 	);
+
+	/**
+	 * @var array 設定オプション
+	 */
+	private $config;
+
+	/**
+	 * コンストラクタ
+	 *
+	 * @param array | ArrayAccess 設定オプション
+	 */
+	public function __construct($configurations = array())
+	{
+		$this->initialize($configurations);
+	}
+
+	/**
+	 * オブジェクトを初期化します。
+	 *
+	 * @param Symfony\Component\HttpFoundation\File\UploadedFile
+	 * @param array | ArrayAccess 設定オプション
+	 */
+	public function initialize($configurations = array())
+	{
+		$this->config = array();
+		$this->config['maxFilesize'] = null;
+		$this->config['allowableType'] = null;
+		$this->config['filenameEncoding'] = null;
+		if (!empty($configurations)) {
+			foreach ($configurations as $name => $value) {
+				$this->config($name, $value);
+			}
+		}
+		return $this;
+	}
+
+	/**
+	 * 引数1の場合は指定された設定の値を返します。
+	 * 引数2の場合は指定された設置の値をセットして$thisを返します。
+	 *
+	 * @param string 設定名
+	 * @return mixed 設定値 または $this
+	 */
+	public function config($name)
+	{
+		switch (func_num_args()) {
+		case 1:
+			return $this->config[$name];
+		case 2:
+			$value = func_get_arg(1);
+			if (isset($value)) {
+				switch ($name) {
+				case 'allowableType':
+				case 'filenameEncoding':
+					if (!is_string($value)) {
+						throw new \InvalidArgumentException(
+							sprintf('The config parameter "%s" only accepts string.', $name));
+					}
+					break;
+				case 'maxFilesize':
+				case 'maxWidth':
+				case 'maxHeight':
+					if (!is_int($value) && !is_string($value)) {
+						throw new \InvalidArgumentException(
+							sprintf('The config parameter "%s" accepts numeric or string.', $name));
+					}
+					break;
+				default:
+					throw new \InvalidArgumentException(
+						sprintf('The config parameter "%s" is not defined.', $name)
+					);
+				}
+				$this->config[$name] = $value;
+			}
+			return $this;
+		}
+		throw new \InvalidArgumentException('Invalid argument count.');
+	}
 
 	/**
 	 * アップロードエラー定数を検証します。
@@ -82,17 +160,22 @@ class FileValidator
 	 *
 	 * @param string ファイル名
 	 * @param string エンコーディング
-	 *
 	 * @retun boolean 検証結果
 	 */
 	public function validateFilename($filename, $encoding = null)
 	{
-		if (!isset($encoding) || strlen($encoding) === 0) {
-			$encoding = mb_internal_encoding();
+		if (!isset($encoding)) {
+			$encoding = $this->config('filenameEncoding');
 		}
+
+		if (!isset($encoding)) {
+			return;
+		}
+
 		if (mb_check_encoding($filename, $encoding)) {
 			return true;
 		}
+
 		throw new FilenameException(
 			sprintf('The filename is including invalid bytes for encoding:%s.', $encoding)
 		);
@@ -108,8 +191,14 @@ class FileValidator
 	 * @throws \InvalidArgumentException ファイル最大値の指定が解析不能、またはファイルサイズの取得に失敗した場合
 	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
 	 */
-	public function validateFilesize($filesize, $maxFilesize)
+	public function validateFilesize($filesize, $maxFilesize = null)
 	{
+		if (!isset($maxFilesize)) {
+			$maxFilesize = $this->config('maxFilesize');
+		}
+		if (!isset($maxFilesize)) {
+			return;
+		}
 		$maxBytes = (is_string($maxFilesize)) ? $this->convertToBytes(sprintf('%sB', $maxFilesize)) : $maxFilesize;
 		if (false === $maxBytes) {
 			throw new \InvalidArgumentException(
@@ -136,8 +225,14 @@ class FileValidator
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ExtensionException 拡張子が許可する拡張子に一致しない場合
 	 */
-	public function validateExtension($extension, $allowableType)
+	public function validateExtension($extension, $allowableType = null)
 	{
+		if (!isset($allowableType)) {
+			$allowableType = $this->config('allowableType');
+		}
+		if (!isset($allowableType)) {
+			return;
+		}
 		$allowableTypes = explode(',', $allowableType);
 		foreach ($allowableTypes as $type) {
 			switch ($type) {
@@ -166,6 +261,7 @@ class FileValidator
 	 *
 	 * @param string ファイルパス
 	 * @param string 拡張子
+	 * @retun boolean 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ImageTypeException 拡張子が内容と一致しない場合
 	 */
@@ -203,8 +299,17 @@ class FileValidator
 	 * @param int 高さ上限値 (px)
 	 * @retun boolean 検証結果
 	 */
-	public function validateImageSize($filepath, $maxWidth, $maxHeight)
+	public function validateImageSize($filepath, $maxWidth = null, $maxHeight = null)
 	{
+		if (!isset($maxWidth)) {
+			$maxWidth = $this->config('maxWidth');
+		}
+		if (!isset($maxHeight)) {
+			$maxHeight = $this->config('maxHeight');
+		}
+		if (!isset($maxWidth) && !isset($maxHeight)) {
+			return;
+		}
 		$extension = strtolower(pathinfo($filepath, \PATHINFO_EXTENSION));
 		if (!in_array($extension, self::$imageExtensions)) {
 			return true;

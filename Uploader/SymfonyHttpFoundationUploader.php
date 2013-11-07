@@ -9,7 +9,7 @@
 namespace Volcanus\FileUploader\Uploader;
 
 use Volcanus\FileUploader\Exception\UploaderException;
-use Volcanus\FileUploader\FileValidator;
+use Volcanus\FileUploader\FileValidatorInterface;
 
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -25,11 +25,6 @@ class SymfonyHttpFoundationUploader implements UploaderInterface
 	 * @var Symfony\Component\HttpFoundation\File\UploadedFile
 	 */
 	private $file;
-
-	/**
-	 * @var Volcanus\FileUploader\FileValidator
-	 */
-	private $validator;
 
 	/**
 	 * @var array 設定オプション
@@ -57,9 +52,6 @@ class SymfonyHttpFoundationUploader implements UploaderInterface
 	{
 		$this->file = $file;
 		$this->config = array();
-		$this->config['maxFilesize'] = null;
-		$this->config['allowableType'] = null;
-		$this->config['filenameEncoding'] = null;
 		$this->config['moveDirectory'] = null;
 		$this->config['moveRetry'] = null;
 		if (!empty($configurations)) {
@@ -67,7 +59,6 @@ class SymfonyHttpFoundationUploader implements UploaderInterface
 				$this->config($name, $value);
 			}
 		}
-		$this->validator = new FileValidator();
 		return $this;
 	}
 
@@ -87,19 +78,6 @@ class SymfonyHttpFoundationUploader implements UploaderInterface
 			$value = func_get_arg(1);
 			if (isset($value)) {
 				switch ($name) {
-				case 'allowableType':
-				case 'filenameEncoding':
-					if (!is_string($value)) {
-						throw new \InvalidArgumentException(
-							sprintf('The config parameter "%s" only accepts string.', $name));
-					}
-					break;
-				case 'maxFilesize':
-					if (!is_int($value) && !is_string($value)) {
-						throw new \InvalidArgumentException(
-							sprintf('The config parameter "%s" accepts numeric or string.', $name));
-					}
-					break;
 				case 'moveRetry':
 					if (!is_int($value) && !ctype_digit($value)) {
 						throw new \InvalidArgumentException(
@@ -141,7 +119,7 @@ class SymfonyHttpFoundationUploader implements UploaderInterface
 	/**
 	 * アップロードファイルを検証します。
 	 *
-	 * @param array | ArrayAccess 設定
+	 * @param Volcanus\FileUploader\FileValidatorInterface
 	 * @return boolean
 	 *
 	 * @throws Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが設定値を超えている場合
@@ -150,36 +128,13 @@ class SymfonyHttpFoundationUploader implements UploaderInterface
 	 * @throws Volcanus\FileUploader\Exception\ImageTypeException 画像ファイルの拡張子がファイルの内容と一致しない場合
 	 * @throws Volcanus\FileUploader\Exception\UploaderException その他何らかの理由でアップロードが受け付けられない場合
 	 */
-	public function validate($options = array())
+	public function validate(FileValidatorInterface $validator)
 	{
-		if (isset($options['maxFilesize'])) {
-			$this->config('maxFilesize', $options['maxFilesize']);
-		}
-
-		if (isset($options['allowableType'])) {
-			$this->config('allowableType', $options['allowableType']);
-		}
-
-		if (isset($options['filenameEncoding'])) {
-			$this->config('filenameEncoding', $options['filenameEncoding']);
-		}
-
-		$this->validator->validateUploadError($this->file->getError());
-
-		$this->validator->validateFilename($this->file->getClientOriginalName(), $this->config('filenameEncoding'));
-
-		$this->validator->validateImageType($this->file->getPathname(), $this->file->getClientOriginalExtension());
-
-		$maxFilesize = $this->config('maxFilesize');
-		if (isset($maxFilesize)) {
-			$this->validator->validateFilesize($this->file->getSize(), $maxFilesize);
-		}
-
-		$allowableType = $this->config('allowableType');
-		if (isset($allowableType)) {
-			$this->validator->validateExtension($this->file->getClientOriginalExtension(), $allowableType);
-		}
-
+		$validator->validateUploadError($this->file->getError());
+		$validator->validateFilename($this->file->getClientOriginalName());
+		$validator->validateImageType($this->file->getPathname(), $this->file->getClientOriginalExtension());
+		$validator->validateFilesize($this->file->getSize());
+		$validator->validateExtension($this->file->getClientOriginalExtension());
 		return true;
 	}
 
