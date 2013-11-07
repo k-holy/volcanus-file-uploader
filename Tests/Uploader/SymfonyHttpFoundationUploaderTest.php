@@ -114,7 +114,9 @@ class SymfonyHttpFoundationUploaderTest extends \PHPUnit_Framework_TestCase
 			realpath(__DIR__ . '/../Fixtures/this-is.jpg'),
 			"\0xfc\xbf\xbf\xbf\xbf\xbf". '.jpg'
 		));
-		$uploader->validate();
+		$uploader->validate(array(
+			'filenameEncoding' => 'UTF-8',
+		));
 	}
 
 	public function testMove()
