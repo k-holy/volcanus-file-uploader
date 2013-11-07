@@ -9,6 +9,8 @@
 namespace Volcanus\Tests\FileUploader\Uploader;
 
 use Volcanus\FileUploader\Uploader\SymfonyHttpFoundationUploader;
+use Volcanus\FileUploader\FileValidator;
+
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -44,9 +46,11 @@ class SymfonyHttpFoundationUploaderTest extends \PHPUnit_Framework_TestCase
 			realpath(__DIR__ . '/../Fixtures/this-is.jpg'),
 			'オリジナル.jpg'
 		));
-		$uploader->validate(array(
-			'maxFilesize' => '14K',
-		));
+		$uploader->validate(
+			new FileValidator(array(
+				'maxFilesize' => '14K',
+			))
+		);
 	}
 
 	/**
@@ -61,7 +65,9 @@ class SymfonyHttpFoundationUploaderTest extends \PHPUnit_Framework_TestCase
 			null,
 			\UPLOAD_ERR_INI_SIZE
 		));
-		$uploader->validate();
+		$uploader->validate(
+			new FileValidator()
+		);
 	}
 
 	/**
@@ -76,7 +82,9 @@ class SymfonyHttpFoundationUploaderTest extends \PHPUnit_Framework_TestCase
 			null,
 			\UPLOAD_ERR_FORM_SIZE
 		));
-		$uploader->validate();
+		$uploader->validate(
+			new FileValidator()
+		);
 	}
 
 	/**
@@ -88,9 +96,11 @@ class SymfonyHttpFoundationUploaderTest extends \PHPUnit_Framework_TestCase
 			realpath(__DIR__ . '/../Fixtures/this-is.jpg'),
 			'オリジナル.jpg'
 		));
-		$uploader->validate(array(
-			'allowableType' => 'gif',
-		));
+		$uploader->validate(
+			new FileValidator(array(
+				'allowableType' => 'gif',
+			))
+		);
 	}
 
 	/**
@@ -102,7 +112,9 @@ class SymfonyHttpFoundationUploaderTest extends \PHPUnit_Framework_TestCase
 			realpath(__DIR__ . '/../Fixtures/this-is-gif-not.jpg'),
 			'オリジナル.jpg'
 		));
-		$uploader->validate();
+		$uploader->validate(
+			new FileValidator()
+		);
 	}
 
 	/**
@@ -114,9 +126,11 @@ class SymfonyHttpFoundationUploaderTest extends \PHPUnit_Framework_TestCase
 			realpath(__DIR__ . '/../Fixtures/this-is.jpg'),
 			"\0xfc\xbf\xbf\xbf\xbf\xbf". '.jpg'
 		));
-		$uploader->validate(array(
-			'filenameEncoding' => 'UTF-8',
-		));
+		$uploader->validate(
+			new FileValidator(array(
+				'filenameEncoding' => 'UTF-8',
+			))
+		);
 	}
 
 	public function testMove()

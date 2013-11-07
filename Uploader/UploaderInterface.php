@@ -8,6 +8,8 @@
 
 namespace Volcanus\FileUploader\Uploader;
 
+use Volcanus\FileUploader\FileValidatorInterface;
+
 /**
  * アップローダインタフェース
  *
@@ -26,7 +28,7 @@ interface UploaderInterface
 	/**
 	 * アップロードファイルを検証します。
 	 *
-	 * @param array | ArrayAccess 設定
+	 * @param Volcanus\FileUploader\FileValidatorInterface
 	 *
 	 * @throws Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが設定値を超えている場合
 	 * @throws Volcanus\FileUploader\Exception\FilenameException 設定されたエンコーディングに存在しない文字がファイル名に含まれている場合
@@ -34,7 +36,7 @@ interface UploaderInterface
 	 * @throws Volcanus\FileUploader\Exception\ImagetypeException 画像ファイルの拡張子がファイルの内容と一致しない場合
 	 * @throws Volcanus\FileUploader\Exception\UploaderException その他何らかの理由でアップロードが受け付けられない場合
 	 */
-	public function validate($options);
+	public function validate(FileValidatorInterface $validator);
 
 	/**
 	 * アップロードファイルを移動し、移動したファイルのパスを返します。
