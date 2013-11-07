@@ -3,7 +3,7 @@
     "homepage": "https://github.com/k-holy/volcanus-file-uploader",
     "type": "library",
     "description": "file uploader",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "license": "MIT",
     "authors": [
         {
