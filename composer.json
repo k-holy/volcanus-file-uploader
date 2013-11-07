@@ -1,0 +1,24 @@
+{
+    "name": "volcanus/file-uploader",
+    "homepage": "https://github.com/k-holy/volcanus-file-uploader",
+    "type": "library",
+    "description": "file uploader",
+    "version": "0.1.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "k-holy",
+            "email": "k.holy74@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": { "Volcanus\\FileUploader": "" }
+    },
+    "target-dir": "Volcanus/FileUploader",
+    "require": {
+        "php": ">=5.3.3"
+    },
+    "require-dev": {
+        "symfony/http-foundation": "2.3.*"
+    }
+}
