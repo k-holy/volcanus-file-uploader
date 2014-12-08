@@ -12,9 +12,8 @@
         }
     ],
     "autoload": {
-        "psr-0": { "Volcanus\\FileUploader": "." }
+        "psr-0": { "Volcanus\\FileUploader": "src/" }
     },
-    "target-dir": "Volcanus/FileUploader",
     "require": {
         "php": ">=5.3.3"
     },

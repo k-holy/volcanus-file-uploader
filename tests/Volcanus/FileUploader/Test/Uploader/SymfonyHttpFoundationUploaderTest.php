@@ -6,7 +6,7 @@
  * @license The MIT License (MIT)
  */
 
-namespace Volcanus\Tests\FileUploader\Uploader;
+namespace Volcanus\FileUploader\Test\Uploader;
 
 use Volcanus\FileUploader\Uploader\SymfonyHttpFoundationUploader;
 use Volcanus\FileUploader\FileValidator;
