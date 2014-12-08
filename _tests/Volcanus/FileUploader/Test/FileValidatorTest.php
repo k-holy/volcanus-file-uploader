@@ -6,7 +6,7 @@
  * @license The MIT License (MIT)
  */
 
-namespace Volcanus\Tests\FileUploader;
+namespace Volcanus\FileUploader\Test;
 
 use Volcanus\FileUploader\FileValidator;
 
