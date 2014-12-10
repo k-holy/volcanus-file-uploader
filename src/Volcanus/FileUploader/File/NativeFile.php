@@ -24,21 +24,22 @@ class NativeFile implements FileInterface
 	private $path;
 
 	/**
+	 * @var string アップロード元のファイル名
+	 */
+	private $clientFilename;
+
+	/**
 	 * @var int アップロードされたファイルのサイズ
 	 */
 	private $size;
 
 	/**
-	 * アップロード元のファイル名
-	 *
-	 * @var string
+	 * @var string アップロードされたファイルのMIMEタイプ
 	 */
-	private $clientFilename;
+	private $mimeType;
 
 	/**
-	 * アップロードエラーコード
-	 *
-	 * @var int
+	 * @var int アップロードエラーコード
 	 * @see http://jp.php.net/manual/ja/features.file-upload.errors.php
 	 */
 	private $error;
@@ -57,33 +58,20 @@ class NativeFile implements FileInterface
 		}
 		$this->path = $file['tmp_name'];
 
-		$isFile = is_file($this->path);
-
 		$this->error = (!array_key_exists('error', $file)) ? \UPLOAD_ERR_OK : $file['error'];
 
-		if ($this->error === \UPLOAD_ERR_OK && !$isFile) {
+		if ($this->error === \UPLOAD_ERR_OK && !is_file($this->path)) {
 			throw new \InvalidArgumentException(
 				sprintf('The file "%s" is not a file.', $this->path)
 			);
 		}
 
-		if (!array_key_exists('name', $file)) {
-			if (!$isFile) {
-				throw new \InvalidArgumentException(
-					'The files key "name" does not exists.'
-				);
-			}
-			$this->clientFilename = basename($this->path);
-		} else {
+		if (array_key_exists('name', $file)) {
 			$this->clientFilename = $file['name'];
 		}
 
-		if ($isFile) {
-			$this->size = filesize($this->path);
-		} elseif (array_key_exists('size', $file)) {
-			$this->size = $file['size'];
-		}
-
+		$this->size = null;
+		$this->mimeType = null;
 	}
 
 	/**
@@ -103,6 +91,9 @@ class NativeFile implements FileInterface
 	 */
 	public function getSize()
 	{
+		if ($this->size === null && $this->isValid()) {
+			$this->size = filesize($this->path);
+		}
 		return $this->size;
 	}
 
@@ -113,17 +104,17 @@ class NativeFile implements FileInterface
 	 */
 	public function getMimeType()
 	{
-		if ($this->isValid()) {
+		if ($this->mimeType === null && $this->isValid()) {
 			$getMimeType = new \finfo(\FILEINFO_MIME_TYPE);
-			return $getMimeType->file($this->path);
+			$this->mimeType = $getMimeType->file($this->path);
 		}
-		return null;
+		return $this->mimeType;
 	}
 
 	/**
 	 * アップロードファイルのクライアントファイル名を返します。
 	 *
-	 * @return mixed クライアントファイル名
+	 * @return string クライアントファイル名
 	 */
 	public function getClientFilename()
 	{
@@ -169,7 +160,7 @@ class NativeFile implements FileInterface
 	 */
 	public function move($directory, $filename)
 	{
-		$destination = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $filename;
+		$destination = rtrim($directory, '/\\') . \DIRECTORY_SEPARATOR . $filename;
 		$source = $this->path;
 		if (!$this->isValid()) {
 			throw new FilepathException(

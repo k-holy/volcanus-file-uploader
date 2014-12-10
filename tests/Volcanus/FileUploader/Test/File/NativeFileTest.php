@@ -18,6 +18,24 @@ use Volcanus\FileUploader\File\NativeFile;
 class NativeFileTest extends \PHPUnit_Framework_TestCase
 {
 
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testConstructorRaiseExceptionWhenNoTmpName()
+	{
+		$file = new NativeFile(array());
+	}
+
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testConstructorRaiseExceptionWhenTmpNameIsNotFile()
+	{
+		$file = new NativeFile(array(
+			'tmp_name' => '/file/not/found',
+		));
+	}
+
 	public function testGetPath()
 	{
 		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');

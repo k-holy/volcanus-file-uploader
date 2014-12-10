@@ -40,7 +40,7 @@ interface FileInterface
 	/**
 	 * アップロードファイルのクライアントファイル名を返します。
 	 *
-	 * @return mixed クライアントファイル名
+	 * @return string クライアントファイル名
 	 */
 	public function getClientFilename();
 

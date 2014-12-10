@@ -66,7 +66,7 @@ class SymfonyFile implements FileInterface
 	/**
 	 * アップロードファイルのクライアントファイル名を返します。
 	 *
-	 * @return mixed クライアントファイル名
+	 * @return string クライアントファイル名
 	 */
 	public function getClientFilename()
 	{
@@ -113,7 +113,7 @@ class SymfonyFile implements FileInterface
 	public function move($directory, $filename)
 	{
 		$source = $this->file->getPathname();
-		$destination = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $filename;
+		$destination = rtrim($directory, '/\\') . \DIRECTORY_SEPARATOR . $filename;
 		if ($this->file->isValid()) {
 			try {
 				$file = $this->file->move($directory, $filename);

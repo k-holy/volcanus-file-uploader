@@ -24,16 +24,22 @@ class SplFile implements FileInterface
 	private $file;
 
 	/**
-	 * アップロード元のファイル名
-	 *
-	 * @var string
+	 * @var string アップロード元のファイル名
 	 */
 	private $clientFilename;
 
 	/**
-	 * アップロードエラーコード
-	 *
-	 * @var int
+	 * @var int アップロードされたファイルのサイズ
+	 */
+	private $size;
+
+	/**
+	 * @var string アップロードされたファイルのMIMEタイプ
+	 */
+	private $mimeType;
+
+	/**
+	 * @var int アップロードエラーコード
 	 * @see http://jp.php.net/manual/ja/features.file-upload.errors.php
 	 */
 	private $error;
@@ -54,6 +60,8 @@ class SplFile implements FileInterface
 			);
 		}
 		$this->clientFilename = ($clientFilename === null) ? $file->getBasename() : $clientFilename;
+		$this->size = null;
+		$this->mimeType = null;
 		$this->file = $file;
 	}
 
@@ -74,7 +82,10 @@ class SplFile implements FileInterface
 	 */
 	public function getSize()
 	{
-		return $this->file->getSize();
+		if ($this->size === null && $this->isValid()) {
+			return $this->file->getSize();
+		}
+		return $this->size;
 	}
 
 	/**
@@ -84,17 +95,17 @@ class SplFile implements FileInterface
 	 */
 	public function getMimeType()
 	{
-		if ($this->isValid()) {
+		if ($this->mimeType === null && $this->isValid()) {
 			$getMimeType = new \finfo(\FILEINFO_MIME_TYPE);
-			return $getMimeType->file($this->file->getPathname());
+			$this->mimeType = $getMimeType->file($this->file->getPathname());
 		}
-		return null;
+		return $this->mimeType;
 	}
 
 	/**
 	 * アップロードファイルのクライアントファイル名を返します。
 	 *
-	 * @return mixed クライアントファイル名
+	 * @return string クライアントファイル名
 	 */
 	public function getClientFilename()
 	{
@@ -108,7 +119,7 @@ class SplFile implements FileInterface
 	 */
 	public function getClientExtension()
 	{
-		return pathinfo($this->clientFilename, PATHINFO_EXTENSION);
+		return pathinfo($this->clientFilename, \PATHINFO_EXTENSION);
 	}
 
 	/**
@@ -140,7 +151,7 @@ class SplFile implements FileInterface
 	 */
 	public function move($directory, $filename)
 	{
-		$destination = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $filename;
+		$destination = rtrim($directory, '/\\') . \DIRECTORY_SEPARATOR . $filename;
 		$source = $this->file->getPathname();
 		if (!$this->isValid()) {
 			throw new FilepathException(
