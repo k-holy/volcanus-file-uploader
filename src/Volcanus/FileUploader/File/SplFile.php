@@ -8,6 +8,8 @@
 
 namespace Volcanus\FileUploader\File;
 
+use Volcanus\FileUploader\Exception\FilepathException;
+
 /**
  * SPL(SplFileInfo)アップロードファイル
  *
@@ -48,7 +50,7 @@ class SplFile implements FileInterface
 		$this->error = ($error === null) ? \UPLOAD_ERR_OK : $error;
 		if ($this->error === \UPLOAD_ERR_OK && !is_file($file->getPathname())) {
 			throw new \InvalidArgumentException(
-				sprintf('The file "%s" is not a file.', (string)$file)
+				sprintf('The file "%s" is not a file.', $file->getPathname())
 			);
 		}
 		$this->clientFilename = ($clientFilename === null) ? $file->getBasename() : $clientFilename;
@@ -82,9 +84,9 @@ class SplFile implements FileInterface
 	 */
 	public function getMimeType()
 	{
-		if ($this->getError() === \UPLOAD_ERR_OK) {
+		if ($this->isValid()) {
 			$getMimeType = new \finfo(\FILEINFO_MIME_TYPE);
-			return $getMimeType->file($this->getPath());
+			return $getMimeType->file($this->file->getPathname());
 		}
 		return null;
 	}
@@ -120,13 +122,40 @@ class SplFile implements FileInterface
 	}
 
 	/**
-	 * アップロードが完了したかどうかを返します。
+	 * アップロードファイルが妥当かどうかを返します。
 	 *
-	 * @return boolean アップロードが完了したかどうか
+	 * @return boolean アップロードファイルが妥当かどうか
 	 */
 	public function isValid()
 	{
-		return ($this->error === \UPLOAD_ERR_OK);
+		return ($this->error === \UPLOAD_ERR_OK && $this->file->isFile());
+	}
+
+	/**
+	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
+	 *
+	 * @param string 移動先ディレクトリ
+	 * @param string 移動先ファイル名
+	 * @param string 移動先ファイルパス
+	 */
+	public function move($directory, $filename)
+	{
+		$destination = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $filename;
+		$source = $this->file->getPathname();
+		if (!$this->isValid()) {
+			throw new FilepathException(
+				sprintf('The file could not move "%s" -> "%s"', $source, $destination)
+			);
+		}
+		if (false === @rename($source, $destination)) {
+			$error = error_get_last();
+			$message = (isset($error['message'])) ? sprintf(' (%s)', strip_tags($error['message'])) : '';
+			throw new FilepathException(
+				sprintf('The file could not move "%s" -> "%s"%s', $source, $destination, $message)
+			);
+		}
+		@chmod($destination, 0666 &~umask());
+		return $destination;
 	}
 
 }

@@ -10,6 +10,7 @@ namespace Volcanus\FileUploader;
 
 use Volcanus\FileUploader\FileValidator;
 use Volcanus\FileUploader\File\FileInterface;
+use Volcanus\FileUploader\Exception\FilepathException;
 use Volcanus\FileUploader\Exception\UploaderException;
 
 /**
@@ -129,18 +130,16 @@ class Uploader
 		$moveDirectory = $this->config('moveDirectory');
 		$moveRetry = $this->config('moveRetry');
 		if ($file->isValid()) {
+			$this->prepareMove($moveDirectory);
 			$extension = $file->getClientExtension();
-			$source = $file->getPath();
-			$directory = $this->prepareMove($moveDirectory);
 			while ($moveRetry > 0) {
 				$filename = uniqid();
-				$destination = $directory . DIRECTORY_SEPARATOR . $filename;
 				if (strlen($extension) >= 1) {
-					$destination .= '.' . $extension;
+					$filename .= '.' . $extension;
 				}
-				if (@rename($source, $destination)) {
-					@chmod($destination, 0666 &~umask());
-					return $destination;
+				try {
+					return $file->move($moveDirectory, $filename);
+				} catch (FilepathException $e) {
 				}
 				$moveRetry--;
 			}
@@ -152,7 +151,6 @@ class Uploader
 
 	private function prepareMove($directory)
 	{
-		$directory = rtrim($directory, '/\\');
 		if (!is_dir($directory) && false === @mkdir($directory, 0777, true)) {
 			throw new UploaderException(
 				sprintf('The directory "%s" could not create.', $directory)
@@ -163,7 +161,6 @@ class Uploader
 				sprintf('The directory "%s" could not write.', $directory)
 			);
 		}
-		return $directory;
 	}
 
 }

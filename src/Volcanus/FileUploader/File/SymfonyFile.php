@@ -8,6 +8,8 @@
 
 namespace Volcanus\FileUploader\File;
 
+use Volcanus\FileUploader\Exception\FilepathException;
+
 /**
  * Symfony Http-Foundationアップロードファイル
  *
@@ -92,13 +94,39 @@ class SymfonyFile implements FileInterface
 	}
 
 	/**
-	 * アップロードが完了したかどうかを返します。
+	 * アップロードファイルが妥当かどうかを返します。
 	 *
-	 * @return boolean アップロードが完了したかどうか
+	 * @return boolean アップロードファイルが妥当かどうか
 	 */
 	public function isValid()
 	{
 		return $this->file->isValid();
+	}
+
+	/**
+	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
+	 *
+	 * @param string 移動先ディレクトリ
+	 * @param string 移動先ファイル名
+	 * @param string 移動先ファイルパス
+	 */
+	public function move($directory, $filename)
+	{
+		$source = $this->file->getPathname();
+		$destination = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $filename;
+		if ($this->file->isValid()) {
+			try {
+				$file = $this->file->move($directory, $filename);
+				return $file->getPathname();
+			} catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
+				throw new FilepathException(
+					sprintf('The file could not move "%s" -> "%s"', $source, $destination), 0, $e
+				);
+			}
+		}
+		throw new FilepathException(
+			sprintf('The file could not move "%s" -> "%s"', $source, $destination)
+		);
 	}
 
 }

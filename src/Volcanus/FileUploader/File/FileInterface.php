@@ -59,10 +59,19 @@ interface FileInterface
 	public function getError();
 
 	/**
-	 * アップロードが完了したかどうかを返します。
+	 * アップロードファイルが妥当かどうかを返します。
 	 *
-	 * @return boolean アップロードが完了したかどうか
+	 * @return boolean アップロードファイルが妥当かどうか
 	 */
 	public function isValid();
+
+	/**
+	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
+	 *
+	 * @param string 移動先ディレクトリ
+	 * @param string 移動先ファイル名
+	 * @param string 移動先ファイルパス
+	 */
+	public function move($directory, $filename);
 
 }

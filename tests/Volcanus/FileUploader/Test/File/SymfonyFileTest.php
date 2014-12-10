@@ -126,4 +126,56 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 
 	}
 
+	public function testMove()
+	{
+		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$temp_path = $this->copyToTemp($orig_path);
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$temp_path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_OK,
+				$test = true
+			)
+		);
+
+		$moved_path = $file->move(__DIR__, 'test.jpg');
+
+		$this->assertFileEquals($moved_path, $orig_path);
+		$this->assertFileNotExists($temp_path);
+		unlink($moved_path);
+	}
+
+	/**
+	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
+	 */
+	public function testMoveRaiseExceptionWhenUploadedFileIsError()
+	{
+		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$temp_path = $this->copyToTemp($orig_path);
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$temp_path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_CANT_WRITE,
+				$test = true
+			)
+		);
+
+		$moved_path = $file->move(__DIR__, 'test.jpg');
+	}
+
+	private function copyToTemp($path)
+	{
+		$temp_path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . basename($path);
+		copy($path, $temp_path);
+		return $temp_path;
+	}
+
 }

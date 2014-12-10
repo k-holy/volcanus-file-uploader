@@ -9,7 +9,7 @@
 namespace Volcanus\FileUploader\Test;
 
 use Volcanus\FileUploader\Uploader;
-use Volcanus\FileUploader\Exception\UploaderException;
+use Volcanus\FileUploader\Exception\FilepathException;
 
 /**
  * Test for Volcanus\FileUploader\Uploader
@@ -35,6 +35,24 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 	{
 		$uploader = new Uploader();
 		$uploader->config('moveDirectory', true);
+	}
+
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testConfigRaiseExceptionWhenUnsupportedConfig()
+	{
+		$uploader = new Uploader();
+		$uploader->config('unsupported-config', 'foo');
+	}
+
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testConfigRaiseExceptionWhenInvalidArgumentCount()
+	{
+		$uploader = new Uploader();
+		$uploader->config('moveDirectory', 'foo', 'bar');
 	}
 
 	public function testConfigMoveDirectory()
@@ -73,9 +91,6 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testMove()
 	{
-		$orig_path = realpath(__DIR__ . '/Fixtures/this-is.jpg');
-		$temp_path = $this->copyToTemp($orig_path);
-
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isValid')
@@ -84,20 +99,21 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 			->method('getClientExtension')
 			->will($this->returnValue('jpg'));
 		$file->expects($this->once())
-			->method('getPath')
-			->will($this->returnValue($temp_path));
+			->method('move')
+			->will($this->returnCallback(function($directory, $filename) {
+				return $directory . '/' . $filename;
+			}));
+
+		$moveDirectory = '/path/to/moveDirectory';
 
 		$uploader = new Uploader(array(
-			'moveDirectory' => __DIR__,
+			'moveDirectory' => $moveDirectory,
 			'moveRetry'     => 1,
 		));
 
 		$moved_path = $uploader->move($file);
 
-		$this->assertFileEquals($moved_path, $orig_path);
-		$this->assertFileNotExists($temp_path);
-		$this->assertRegExp('/\A[a-z0-9]{13}\.jpg\z/i', basename($moved_path));
-		unlink($moved_path);
+		$this->assertRegExp('~\A/path/to/moveDirectory/[a-z0-9]{13}\.jpg\z~i', $moved_path);
 	}
 
 	/**
@@ -105,9 +121,6 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testMoveRaiseExceptionWhenFileIsNotValid()
 	{
-		$orig_path = realpath(__DIR__ . '/Fixtures/this-is.jpg');
-		$temp_path = $this->copyToTemp($orig_path);
-
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isValid')
@@ -124,11 +137,8 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @expectedException \Volcanus\FileUploader\Exception\UploaderException
 	 */
-	public function testMoveRaiseExceptionWhenDirectoryCouldNotWrite()
+	public function testMoveRaiseExceptionWhenAllRetryFailed()
 	{
-		$orig_path = realpath(__DIR__ . '/Fixtures/this-is.jpg');
-		$temp_path = $this->copyToTemp($orig_path);
-
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isValid')
@@ -136,23 +146,16 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 		$file->expects($this->once())
 			->method('getClientExtension')
 			->will($this->returnValue('jpg'));
-		$file->expects($this->once())
-			->method('getPath')
-			->will($this->returnValue($temp_path));
+		$file->expects($this->any())
+			->method('move')
+			->will($this->throwException(new FilepathException()));
 
 		$uploader = new Uploader(array(
-			'moveDirectory' => '/',
-			'moveRetry'     => 1,
+			'moveDirectory' => __DIR__,
+			'moveRetry'     => 3,
 		));
 
 		$uploader->move($file);
-	}
-
-	private function copyToTemp($path)
-	{
-		$temp_path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . basename($path);
-		copy($path, $temp_path);
-		return $temp_path;
 	}
 
 }
