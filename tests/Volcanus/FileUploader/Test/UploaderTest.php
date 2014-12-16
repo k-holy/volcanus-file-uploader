@@ -104,16 +104,14 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 				return $directory . '/' . $filename;
 			}));
 
-		$moveDirectory = '/path/to/moveDirectory';
-
 		$uploader = new Uploader(array(
-			'moveDirectory' => $moveDirectory,
+			'moveDirectory' => __DIR__,
 			'moveRetry'     => 1,
 		));
 
 		$moved_path = $uploader->move($file);
 
-		$this->assertRegExp('~\A/path/to/moveDirectory/[a-z0-9]{13}\.jpg\z~i', $moved_path);
+		$this->assertRegExp('~/[a-z0-9]{13}\.jpg\z~i', $moved_path);
 	}
 
 	/**

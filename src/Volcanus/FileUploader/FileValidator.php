@@ -67,12 +67,14 @@ class FileValidator
 	public function initialize($configurations = array())
 	{
 		$this->config = array();
-		$this->config['maxFilesize'] = null;
-		$this->config['allowableType'] = null;
-		$this->config['filenameEncoding'] = null;
 		$this->config['enableGmp'] = extension_loaded('gmp');
 		$this->config['enableBcmath'] = extension_loaded('bcmath');
 		$this->config['enableExif'] = extension_loaded('exif');
+		$this->config['allowableType'] = null;
+		$this->config['filenameEncoding'] = null;
+		$this->config['maxWidth'] = null;
+		$this->config['maxHeight'] = null;
+		$this->config['maxFilesize'] = null;
 		if (!empty($configurations)) {
 			foreach ($configurations as $name => $value) {
 				$this->config($name, $value);
@@ -197,6 +199,7 @@ class FileValidator
 
 	/**
 	 * ファイルサイズが指定サイズ以内かどうかを検証します。
+	 * 整数値の範囲制限により、4GBを越える場合は検証できません。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
@@ -230,13 +233,11 @@ class FileValidator
 			if (0 <= bccomp($maxBytes, $filesize)) {
 				return true;
 			}
-		} else {
-			if ($filesize <= $maxBytes) {
-				return true;
-			}
+		} elseif ($filesize <= $maxBytes) {
+			return true;
 		}
 		throw new FilesizeException(
-			sprintf('The uploaded file\'s size %d bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
+			sprintf('The uploaded file\'s size %s bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
 		);
 	}
 

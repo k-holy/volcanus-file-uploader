@@ -394,6 +394,22 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($validator->validateFilesize($file));
 	}
 
+	public function testValidateFilesizeOver2gb()
+	{
+		$validator = new FileValidator(array(
+			'maxFilesize' => '4G',
+			'enableGmp' => false,
+			'enableBcmath' => false,
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getSize')
+			->will($this->returnValue('-1'));
+
+		$this->assertTrue($validator->validateFilesize($file));
+	}
+
 	public function testValidateFilesizeReturnedWhenMaxFilesizeIsNotSet()
 	{
 		$validator = new FileValidator(array(
@@ -459,6 +475,17 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($validator->validateExtension($file));
 	}
 
+	public function testValidateExtensionReturnedWhenAllowableTypeIsNotSet()
+	{
+		$validator = new FileValidator(array(
+			'allowableType' => null,
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+
+		$this->assertNull($validator->validateExtension($file));
+	}
+
 	/**
 	 * @expectedException \Volcanus\FileUploader\Exception\ExtensionException
 	 */
@@ -476,7 +503,27 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$validator->validateExtension($file);
 	}
 
-	public function testValidateImageType()
+	public function testValidateImageTypeGif()
+	{
+		$validator = new FileValidator(array(
+			'enableExif' => false,
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getClientExtension')
+			->will($this->returnValue('gif'));
+		$file->expects($this->once())
+			->method('getMimeType')
+			->will($this->returnValue('image/gif'));
+		$file->expects($this->once())
+			->method('getPath')
+			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.gif'))); // 180 * 180 gif
+
+		$this->assertTrue($validator->validateImageType($file));
+	}
+
+	public function testValidateImageTypeJpeg()
 	{
 		$validator = new FileValidator(array(
 			'enableExif' => false,
@@ -493,7 +540,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->method('getPath')
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
 
-		$validator->validateImageType($file);
+		$this->assertTrue($validator->validateImageType($file));
 	}
 
 	public function testValidateImageTypeByExif()
@@ -514,6 +561,18 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
 
 		$validator->validateImageType($file);
+	}
+
+	public function testValidateImageTypeReturnedWhenExtensionIsNotImage()
+	{
+		$validator = new FileValidator();
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getClientExtension')
+			->will($this->returnValue('txt'));
+
+		$this->assertNull($validator->validateImageType($file));
 	}
 
 	/**
@@ -574,6 +633,18 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
 
 		$this->assertTrue($validator->validateImageSize($file));
+	}
+
+	public function testValidateImageSizeReturnedWhenMaxWidthAndMaxHeightIsNotSet()
+	{
+		$validator = new FileValidator(array(
+			'maxWidth'  => null,
+			'maxHeight' => null,
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+
+		$this->assertNull($validator->validateImageSize($file));
 	}
 
 	/**
