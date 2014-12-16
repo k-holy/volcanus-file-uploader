@@ -168,7 +168,27 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 			)
 		);
 
-		$moved_path = $file->move(__DIR__, 'test.jpg');
+		$file->move(__DIR__, 'test.jpg');
+	}
+
+	/**
+	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
+	 */
+	public function testMoveRaiseExceptionWhenUploadedFileThrowFileException()
+	{
+		$uploadedFile = $this->getMockBuilder('\Symfony\Component\HttpFoundation\File\UploadedFile')
+			->disableOriginalConstructor()
+			->getMock();
+		$uploadedFile->expects($this->once())
+			->method('isValid')
+			->will($this->returnValue(true));
+		$uploadedFile->expects($this->any())
+			->method('move')
+			->will($this->throwException(new \Symfony\Component\HttpFoundation\File\Exception\FileException()));
+
+		$file = new SymfonyFile($uploadedFile);
+
+		$file->move(__DIR__, 'test.jpg');
 	}
 
 	private function copyToTemp($path)

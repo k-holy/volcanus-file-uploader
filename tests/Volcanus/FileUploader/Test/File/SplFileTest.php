@@ -18,6 +18,16 @@ use Volcanus\FileUploader\File\SplFile;
 class SplFileTest extends \PHPUnit_Framework_TestCase
 {
 
+	/**
+	 * @expectedException \InvalidArgumentException
+	 */
+	public function testConstructorRaiseExceptionWhenFileNotFound()
+	{
+		$file = new SplFile(
+			 new \SplFileInfo('/file/not/found')
+		);
+	}
+
 	public function testGetPath()
 	{
 		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');

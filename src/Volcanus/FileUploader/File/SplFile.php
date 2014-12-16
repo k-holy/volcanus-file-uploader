@@ -83,7 +83,7 @@ class SplFile implements FileInterface
 	public function getSize()
 	{
 		if ($this->size === null && $this->isValid()) {
-			return $this->file->getSize();
+			$this->size = $this->file->getSize();
 		}
 		return $this->size;
 	}

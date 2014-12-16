@@ -70,6 +70,9 @@ class FileValidator
 		$this->config['maxFilesize'] = null;
 		$this->config['allowableType'] = null;
 		$this->config['filenameEncoding'] = null;
+		$this->config['enableGmp'] = extension_loaded('gmp');
+		$this->config['enableBcmath'] = extension_loaded('bcmath');
+		$this->config['enableExif'] = extension_loaded('exif');
 		if (!empty($configurations)) {
 			foreach ($configurations as $name => $value) {
 				$this->config($name, $value);
@@ -94,6 +97,15 @@ class FileValidator
 			$value = func_get_arg(1);
 			if (isset($value)) {
 				switch ($name) {
+				case 'enableGmp':
+				case 'enableBcmath':
+				case 'enableExif':
+					if (!is_bool($value) && !is_int($value) && !ctype_digit($value)) {
+						throw new \InvalidArgumentException(
+							sprintf('The config parameter "%s" accepts boolean or numeric.', $name));
+					}
+					$value = (bool)$value;
+					break;
 				case 'allowableType':
 				case 'filenameEncoding':
 					if (!is_string($value)) {
@@ -107,7 +119,7 @@ class FileValidator
 						throw new \InvalidArgumentException(
 							sprintf('The config parameter "%s" accepts numeric.', $name));
 					}
-					$value = intval($value);
+					$value = (int)$value;
 					break;
 				// 数値または数値 + 単位(K|M|G|T|P|E|Z|Y)
 				case 'maxFilesize':
@@ -167,15 +179,12 @@ class FileValidator
 	 * ファイル名が指定されたエンコーディングで有効かどうかを検証します。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @param string エンコーディング
 	 * @retun boolean 検証結果
 	 */
-	public function validateFilename(FileInterface $file, $encoding = null)
+	public function validateFilename(FileInterface $file)
 	{
-		if (!isset($encoding)) {
-			$encoding = $this->config('filenameEncoding');
-		}
-		if (!isset($encoding)) {
+		$encoding = $this->config('filenameEncoding');
+		if ($encoding === null) {
 			return;
 		}
 		if (mb_check_encoding($file->getClientFilename(), $encoding)) {
@@ -190,17 +199,14 @@ class FileValidator
 	 * ファイルサイズが指定サイズ以内かどうかを検証します。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @param mixed ファイルサイズ上限値
 	 * @retun boolean 検証結果
 	 *
 	 * @throws \InvalidArgumentException ファイル最大値の指定が解析不能、またはファイルサイズの取得に失敗した場合
 	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
 	 */
-	public function validateFilesize(FileInterface $file, $maxFilesize = null)
+	public function validateFilesize(FileInterface $file)
 	{
-		if ($maxFilesize === null) {
-			$maxFilesize = $this->config('maxFilesize');
-		}
+		$maxFilesize = $this->config('maxFilesize');
 		if ($maxFilesize === null) {
 			return;
 		}
@@ -216,8 +222,18 @@ class FileValidator
 		if ($filesize < 0) {
 			$filesize = sprintf('%u', $filesize);
 		}
-		if ($filesize <= $maxBytes) {
-			return true;
+		if ($this->config('enableGmp')) {
+			if (0 <= gmp_cmp(gmp_init($maxBytes, 10), gmp_init($filesize, 10))) {
+				return true;
+			}
+		} elseif ($this->config('enableBcmath')) {
+			if (0 <= bccomp($maxBytes, $filesize)) {
+				return true;
+			}
+		} else {
+			if ($filesize <= $maxBytes) {
+				return true;
+			}
 		}
 		throw new FilesizeException(
 			sprintf('The uploaded file\'s size %d bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
@@ -228,16 +244,13 @@ class FileValidator
 	 * 拡張子が指定したファイル種別に含まれているかどうかを検証します。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @param string 許可する拡張子（カンマ区切りで複数指定可）
 	 * @retun boolean 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ExtensionException 拡張子が許可する拡張子に一致しない場合
 	 */
-	public function validateExtension(FileInterface $file, $allowableType = null)
+	public function validateExtension(FileInterface $file)
 	{
-		if ($allowableType === null) {
-			$allowableType = $this->config('allowableType');
-		}
+		$allowableType = $this->config('allowableType');
 		if ($allowableType === null) {
 			return;
 		}
@@ -307,26 +320,20 @@ class FileValidator
 	 * 拡張子が指定したファイルの画像種別と一致するかどうかを検証します。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @param int 横幅上限値 (px)
-	 * @param int 高さ上限値 (px)
 	 * @retun boolean 検証結果
 	 */
-	public function validateImageSize(FileInterface $file, $maxWidth = null, $maxHeight = null)
+	public function validateImageSize(FileInterface $file)
 	{
-		if ($maxWidth === null) {
-			$maxWidth = $this->config('maxWidth');
-		}
-		if ($maxHeight === null) {
-			$maxHeight = $this->config('maxHeight');
-		}
+		$maxWidth = $this->config('maxWidth');
+		$maxHeight = $this->config('maxHeight');
 		if ($maxWidth === null && $maxHeight === null) {
 			return;
 		}
-		$filepath = $file->getPath();
 		$extension = $file->getClientExtension();
 		if (!in_array($extension, self::$imageExtensions)) {
 			return;
 		}
+		$filepath = $file->getPath();
 		if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
 			if (!empty($maxWidth) && $width > $maxWidth) {
 				throw new ImageWidthException(
@@ -354,7 +361,7 @@ class FileValidator
 	private function getImageType(FileInterface $file)
 	{
 		$filepath = $file->getPath();
-		if (function_exists('exif_imagetype')) {
+		if ($this->config('enableExif')) {
 			return exif_imagetype($filepath);
 		}
 		if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
@@ -378,7 +385,9 @@ class FileValidator
 				$unit = sprintf('%sB', $matches[2]);
 				$units = array('B','KB','MB','GB','TB','PB','EB','ZB','YB');
 				$index = array_search($unit, $units);
-				if (function_exists('bcpow')) {
+				if ($this->config('enableGmp')) {
+					return gmp_strval(gmp_mul(gmp_init($matches[1], 10), gmp_pow(gmp_init(1024, 10), (int)$index)), 10);
+				} elseif ($this->config('enableBcmath')) {
 					return bcmul($matches[1], bcpow(1024, (int)$index));
 				} else {
 					return $matches[1] * pow(1024, (int)$index);
