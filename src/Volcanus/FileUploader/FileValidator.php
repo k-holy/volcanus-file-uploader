@@ -89,6 +89,8 @@ class FileValidator
 	 *
 	 * @param string 設定名
 	 * @return mixed 設定値 または $this
+	 *
+	 * @throws \InvalidArgumentException 引数の指定が不正
 	 */
 	public function config($name)
 	{
@@ -146,6 +148,9 @@ class FileValidator
 	 * アップロードエラー定数を検証します。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
+	 *
+	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
+	 * @throws \Volcanus\FileUploader\Exception\UploaderException その他クライアント側で回避不能なエラーの場合
 	 */
 	public function validateUploadError(FileInterface $file)
 	{
@@ -182,6 +187,8 @@ class FileValidator
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
+	 *
+	 * @throws \Volcanus\FileUploader\Exception\FilenameException ファイル名が不正な場合
 	 */
 	public function validateFilename(FileInterface $file)
 	{
@@ -295,22 +302,24 @@ class FileValidator
 		}
 		$mimeType = $file->getMimeType();
 		$imageType = $this->getImageType($file);
-		switch (strtolower($extension)) {
-		case 'jpeg':
-		case 'jpg':
-			if (strcasecmp('jpeg', image_type_to_extension($imageType, false)) === 0 &&
-				strcasecmp($mimeType, image_type_to_mime_type($imageType)) === 0
-			) {
-				return true;
+		if (is_int($imageType)) {
+			switch (strtolower($extension)) {
+			case 'jpeg':
+			case 'jpg':
+				if (strcasecmp('jpeg', image_type_to_extension($imageType, false)) === 0 &&
+					strcasecmp($mimeType, image_type_to_mime_type($imageType)) === 0
+				) {
+					return true;
+				}
+				break;
+			default:
+				if (strcasecmp($extension, image_type_to_extension($imageType, false)) === 0 &&
+					strcasecmp($mimeType, image_type_to_mime_type($imageType)) === 0
+				) {
+					return true;
+				}
+				break;
 			}
-			break;
-		default:
-			if (strcasecmp($extension, image_type_to_extension($imageType, false)) === 0 &&
-				strcasecmp($mimeType, image_type_to_mime_type($imageType)) === 0
-			) {
-				return true;
-			}
-			break;
 		}
 		throw new ImageTypeException(
 			sprintf('The file extension "%s" does not match ImageType.', $extension)
@@ -318,10 +327,14 @@ class FileValidator
 	}
 
 	/**
-	 * 拡張子が指定したファイルの画像種別と一致するかどうかを検証します。
+	 * 画像の横幅または高さが設定した最大値以下かどうかを検証します。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
+	 *
+	 * @throws \Volcanus\FileUploader\Exception\ImageWidthException 画像の横幅が最大値を越えている場合
+	 * @throws \Volcanus\FileUploader\Exception\ImageHeightException 画像の高さが最大値を越えている場合
+	 * @throws \InvalidArgumentException アップロードファイルが画像ではない場合
 	 */
 	public function validateImageSize(FileInterface $file)
 	{
@@ -373,30 +386,28 @@ class FileValidator
 
 	/**
 	 * 単位付きバイト数をバイト数に変換して返します。
-	 * 2GB以上を扱うにはBCMath関数が有効になっている必要があります。
-	 * ファイル最大値の指定が解析不能な場合はfalseを返します。
+	 * 2GB以上を扱うにはGMP関数またはBCMath関数が有効になっている必要があります。
 	 *
 	 * @param string バイト数または単位付きバイト数(K,M,G,T,P,E,Z,Y)
 	 * @return mixed バイト数またはFALSE
 	 */
 	private function convertToBytes($data)
 	{
-		if (preg_match('/\A(\d+)([K|M|G|T|P|E|Z|Y]?)\z/i', $data, $matches)) {
-			if (isset($matches[2])) {
-				$unit = sprintf('%sB', $matches[2]);
-				$units = array('B','KB','MB','GB','TB','PB','EB','ZB','YB');
-				$index = array_search($unit, $units);
-				if ($this->config('enableGmp')) {
-					return gmp_strval(gmp_mul(gmp_init($matches[1], 10), gmp_pow(gmp_init(1024, 10), (int)$index)), 10);
-				} elseif ($this->config('enableBcmath')) {
-					return bcmul($matches[1], bcpow(1024, (int)$index));
-				} else {
-					return $matches[1] * pow(1024, (int)$index);
-				}
-			}
-			return $matches[1];
+		preg_match('/\A(\d+)([K|M|G|T|P|E|Z|Y]?)\z/i', $data, $matches);
+		if (!isset($matches[1])) {
+			return false;
 		}
-		return false;
+		if (isset($matches[2])) {
+			$index = array_search(sprintf('%sB', $matches[2]), array('B','KB','MB','GB','TB','PB','EB','ZB','YB'));
+			if ($this->config('enableGmp')) {
+				return gmp_strval(gmp_mul(gmp_init($matches[1], 10), gmp_pow(gmp_init(1024, 10), (int)$index)), 10);
+			} elseif ($this->config('enableBcmath')) {
+				return bcmul($matches[1], bcpow(1024, (int)$index));
+			} else {
+				return $matches[1] * pow(1024, (int)$index);
+			}
+		}
+		return $matches[1];
 	}
 
 }
