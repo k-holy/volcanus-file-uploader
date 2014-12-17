@@ -8,6 +8,7 @@
 
 namespace Volcanus\FileUploader;
 
+use Volcanus\FileUploader\File\FileInterface;
 use Volcanus\FileUploader\Exception\FilenameException;
 use Volcanus\FileUploader\Exception\FilesizeException;
 use Volcanus\FileUploader\Exception\ExtensionException;
@@ -21,7 +22,7 @@ use Volcanus\FileUploader\Exception\UploaderException;
  *
  * @author k.holy74@gmail.com
  */
-class FileValidator implements FileValidatorInterface
+class FileValidator
 {
 
 	private static $imageExtensions = array(
@@ -66,9 +67,14 @@ class FileValidator implements FileValidatorInterface
 	public function initialize($configurations = array())
 	{
 		$this->config = array();
-		$this->config['maxFilesize'] = null;
+		$this->config['enableGmp'] = extension_loaded('gmp');
+		$this->config['enableBcmath'] = extension_loaded('bcmath');
+		$this->config['enableExif'] = extension_loaded('exif');
 		$this->config['allowableType'] = null;
 		$this->config['filenameEncoding'] = null;
+		$this->config['maxWidth'] = null;
+		$this->config['maxHeight'] = null;
+		$this->config['maxFilesize'] = null;
 		if (!empty($configurations)) {
 			foreach ($configurations as $name => $value) {
 				$this->config($name, $value);
@@ -83,6 +89,8 @@ class FileValidator implements FileValidatorInterface
 	 *
 	 * @param string 設定名
 	 * @return mixed 設定値 または $this
+	 *
+	 * @throws \InvalidArgumentException 引数の指定が不正
 	 */
 	public function config($name)
 	{
@@ -93,6 +101,15 @@ class FileValidator implements FileValidatorInterface
 			$value = func_get_arg(1);
 			if (isset($value)) {
 				switch ($name) {
+				case 'enableGmp':
+				case 'enableBcmath':
+				case 'enableExif':
+					if (!is_bool($value) && !is_int($value) && !ctype_digit($value)) {
+						throw new \InvalidArgumentException(
+							sprintf('The config parameter "%s" accepts boolean or numeric.', $name));
+					}
+					$value = (bool)$value;
+					break;
 				case 'allowableType':
 				case 'filenameEncoding':
 					if (!is_string($value)) {
@@ -100,10 +117,17 @@ class FileValidator implements FileValidatorInterface
 							sprintf('The config parameter "%s" only accepts string.', $name));
 					}
 					break;
-				case 'maxFilesize':
 				case 'maxWidth':
 				case 'maxHeight':
-					if (!is_int($value) && !is_string($value)) {
+					if (!is_int($value) && !ctype_digit($value)) {
+						throw new \InvalidArgumentException(
+							sprintf('The config parameter "%s" accepts numeric.', $name));
+					}
+					$value = (int)$value;
+					break;
+				// 数値または数値 + 単位(K|M|G|T|P|E|Z|Y)
+				case 'maxFilesize':
+					if (!is_int($value) && !preg_match('/\A(\d+)([K|M|G|T|P|E|Z|Y]?)\z/i', $value)) {
 						throw new \InvalidArgumentException(
 							sprintf('The config parameter "%s" accepts numeric or string.', $name));
 					}
@@ -123,11 +147,14 @@ class FileValidator implements FileValidatorInterface
 	/**
 	 * アップロードエラー定数を検証します。
 	 *
-	 * @param int アップロードエラー定数 (UPLOAD_ERR_***)
+	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
+	 *
+	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
+	 * @throws \Volcanus\FileUploader\Exception\UploaderException その他クライアント側で回避不能なエラーの場合
 	 */
-	public function validateUploadError($error)
+	public function validateUploadError(FileInterface $file)
 	{
-		switch ($error) {
+		switch ($file->getError()) {
 		// エラーはなく、ファイルアップロードは成功しています。
 		case \UPLOAD_ERR_OK:
 			return true;
@@ -158,24 +185,20 @@ class FileValidator implements FileValidatorInterface
 	/**
 	 * ファイル名が指定されたエンコーディングで有効かどうかを検証します。
 	 *
-	 * @param string ファイル名
-	 * @param string エンコーディング
+	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
+	 *
+	 * @throws \Volcanus\FileUploader\Exception\FilenameException ファイル名が不正な場合
 	 */
-	public function validateFilename($filename, $encoding = null)
+	public function validateFilename(FileInterface $file)
 	{
-		if (!isset($encoding)) {
-			$encoding = $this->config('filenameEncoding');
-		}
-
-		if (!isset($encoding)) {
+		$encoding = $this->config('filenameEncoding');
+		if ($encoding === null) {
 			return;
 		}
-
-		if (mb_check_encoding($filename, $encoding)) {
+		if (mb_check_encoding($file->getClientFilename(), $encoding)) {
 			return true;
 		}
-
 		throw new FilenameException(
 			sprintf('The filename is including invalid bytes for encoding:%s.', $encoding)
 		);
@@ -183,57 +206,64 @@ class FileValidator implements FileValidatorInterface
 
 	/**
 	 * ファイルサイズが指定サイズ以内かどうかを検証します。
+	 * 整数値の範囲制限により、4GBを越える場合は検証できません。
 	 *
-	 * @param mixed ファイルサイズ
-	 * @param mixed ファイルサイズ上限値
+	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
 	 *
 	 * @throws \InvalidArgumentException ファイル最大値の指定が解析不能、またはファイルサイズの取得に失敗した場合
 	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
 	 */
-	public function validateFilesize($filesize, $maxFilesize = null)
+	public function validateFilesize(FileInterface $file)
 	{
-		if (!isset($maxFilesize)) {
-			$maxFilesize = $this->config('maxFilesize');
-		}
-		if (!isset($maxFilesize)) {
+		$maxFilesize = $this->config('maxFilesize');
+		if ($maxFilesize === null) {
 			return;
 		}
-		$maxBytes = (is_string($maxFilesize)) ? $this->convertToBytes(sprintf('%sB', $maxFilesize)) : $maxFilesize;
+		$maxBytes = (is_string($maxFilesize))
+			? $this->convertToBytes($maxFilesize)
+			: $maxFilesize;
 		if (false === $maxBytes) {
 			throw new \InvalidArgumentException(
 				sprintf('The maxFilesize "%s" is invalid format.', $maxFilesize)
 			);
 		}
+		$filesize = $file->getSize();
 		if ($filesize < 0) {
 			$filesize = sprintf('%u', $filesize);
 		}
-		if ($filesize <= $maxBytes) {
+		if ($this->config('enableGmp')) {
+			if (0 <= gmp_cmp(gmp_init($maxBytes, 10), gmp_init($filesize, 10))) {
+				return true;
+			}
+		} elseif ($this->config('enableBcmath')) {
+			if (0 <= bccomp($maxBytes, $filesize)) {
+				return true;
+			}
+		} elseif ($filesize <= $maxBytes) {
 			return true;
 		}
 		throw new FilesizeException(
-			sprintf('The uploaded file\'s size %d bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
+			sprintf('The uploaded file\'s size %s bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
 		);
 	}
 
 	/**
 	 * 拡張子が指定したファイル種別に含まれているかどうかを検証します。
 	 *
-	 * @param string 拡張子
-	 * @param string 許可する拡張子（カンマ区切りで複数指定可）
+	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ExtensionException 拡張子が許可する拡張子に一致しない場合
 	 */
-	public function validateExtension($extension, $allowableType = null)
+	public function validateExtension(FileInterface $file)
 	{
-		if (!isset($allowableType)) {
-			$allowableType = $this->config('allowableType');
-		}
-		if (!isset($allowableType)) {
+		$allowableType = $this->config('allowableType');
+		if ($allowableType === null) {
 			return;
 		}
 		$allowableTypes = explode(',', $allowableType);
+		$extension = $file->getClientExtension();
 		foreach ($allowableTypes as $type) {
 			switch ($type) {
 			case 'jpeg':
@@ -259,28 +289,33 @@ class FileValidator implements FileValidatorInterface
 	/**
 	 * 拡張子が指定したファイルの画像種別と一致するかどうかを検証します。
 	 *
-	 * @param string ファイルパス
-	 * @param string 拡張子
+	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ImageTypeException 拡張子が内容と一致しない場合
 	 */
-	public function validateImageType($filepath, $extension)
+	public function validateImageType(FileInterface $file)
 	{
+		$extension = $file->getClientExtension();
 		if (!in_array(strtolower($extension), self::$imageExtensions)) {
 			return;
 		}
-		$imageType = $this->getImageType($filepath);
-		if ($imageType & imagetypes()) {
+		$mimeType = $file->getMimeType();
+		$imageType = $this->getImageType($file);
+		if (is_int($imageType)) {
 			switch (strtolower($extension)) {
 			case 'jpeg':
 			case 'jpg':
-				if (strcasecmp('jpeg', image_type_to_extension($imageType, false)) === 0) {
+				if (strcasecmp('jpeg', image_type_to_extension($imageType, false)) === 0 &&
+					strcasecmp($mimeType, image_type_to_mime_type($imageType)) === 0
+				) {
 					return true;
 				}
 				break;
 			default:
-				if (strcasecmp($extension, image_type_to_extension($imageType, false)) === 0) {
+				if (strcasecmp($extension, image_type_to_extension($imageType, false)) === 0 &&
+					strcasecmp($mimeType, image_type_to_mime_type($imageType)) === 0
+				) {
 					return true;
 				}
 				break;
@@ -292,28 +327,27 @@ class FileValidator implements FileValidatorInterface
 	}
 
 	/**
-	 * 拡張子が指定したファイルの画像種別と一致するかどうかを検証します。
+	 * 画像の横幅または高さが設定した最大値以下かどうかを検証します。
 	 *
-	 * @param string ファイルパス
-	 * @param int 横幅上限値 (px)
-	 * @param int 高さ上限値 (px)
+	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun boolean 検証結果
+	 *
+	 * @throws \Volcanus\FileUploader\Exception\ImageWidthException 画像の横幅が最大値を越えている場合
+	 * @throws \Volcanus\FileUploader\Exception\ImageHeightException 画像の高さが最大値を越えている場合
+	 * @throws \InvalidArgumentException アップロードファイルが画像ではない場合
 	 */
-	public function validateImageSize($filepath, $maxWidth = null, $maxHeight = null)
+	public function validateImageSize(FileInterface $file)
 	{
-		if (!isset($maxWidth)) {
-			$maxWidth = $this->config('maxWidth');
-		}
-		if (!isset($maxHeight)) {
-			$maxHeight = $this->config('maxHeight');
-		}
-		if (!isset($maxWidth) && !isset($maxHeight)) {
+		$maxWidth = $this->config('maxWidth');
+		$maxHeight = $this->config('maxHeight');
+		if ($maxWidth === null && $maxHeight === null) {
 			return;
 		}
-		$extension = strtolower(pathinfo($filepath, \PATHINFO_EXTENSION));
+		$extension = $file->getClientExtension();
 		if (!in_array($extension, self::$imageExtensions)) {
-			return true;
+			return;
 		}
+		$filepath = $file->getPath();
 		if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
 			if (!empty($maxWidth) && $width > $maxWidth) {
 				throw new ImageWidthException(
@@ -335,12 +369,13 @@ class FileValidator implements FileValidatorInterface
 	/**
 	 * 指定されたファイルのImageType定数を返します。
 	 *
-	 * @param string ファイルパス
+	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
 	 * @retun mixed 定数値またはFALSE
 	 */
-	private function getImageType($filepath)
+	private function getImageType(FileInterface $file)
 	{
-		if (function_exists('exif_imagetype')) {
+		$filepath = $file->getPath();
+		if ($this->config('enableExif')) {
 			return exif_imagetype($filepath);
 		}
 		if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
@@ -351,28 +386,28 @@ class FileValidator implements FileValidatorInterface
 
 	/**
 	 * 単位付きバイト数をバイト数に変換して返します。
-	 * 2GB以上を扱うにはBCMath関数が有効になっている必要があります。
-	 * ファイル最大値の指定が解析不能な場合はfalseを返します。
+	 * 2GB以上を扱うにはGMP関数またはBCMath関数が有効になっている必要があります。
 	 *
-	 * @param string バイト数または単位付きバイト数(B,KB,MB,GB,TB,PB,EB,ZB,YB)
+	 * @param string バイト数または単位付きバイト数(K,M,G,T,P,E,Z,Y)
 	 * @return mixed バイト数またはFALSE
 	 */
 	private function convertToBytes($data)
 	{
-		$units = array('B','KB','MB','GB','TB','PB','EB','ZB','YB');
-		$pattern = sprintf('/\A(\d+)(%s)*\z/i', implode('|', $units));
-		if (preg_match($pattern, $data, $matches)) {
-			if (isset($matches[2])) {
-				$index = array_search($matches[2], $units);
-				if (function_exists('bcpow')) {
-					return bcmul($matches[1], bcpow(1024, (int)$index));
-				} else {
-					return $matches[1] * pow(1024, (int)$index);
-				}
-			}
-			return $matches[1];
+		preg_match('/\A(\d+)([K|M|G|T|P|E|Z|Y]?)\z/i', $data, $matches);
+		if (!isset($matches[1])) {
+			return false;
 		}
-		return false;
+		if (isset($matches[2])) {
+			$index = array_search(sprintf('%sB', $matches[2]), array('B','KB','MB','GB','TB','PB','EB','ZB','YB'));
+			if ($this->config('enableGmp')) {
+				return gmp_strval(gmp_mul(gmp_init($matches[1], 10), gmp_pow(gmp_init(1024, 10), (int)$index)), 10);
+			} elseif ($this->config('enableBcmath')) {
+				return bcmul($matches[1], bcpow(1024, (int)$index));
+			} else {
+				return $matches[1] * pow(1024, (int)$index);
+			}
+		}
+		return $matches[1];
 	}
 
 }
