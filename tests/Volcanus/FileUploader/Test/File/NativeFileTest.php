@@ -120,6 +120,34 @@ class NativeFileTest extends \PHPUnit_Framework_TestCase
 
 	}
 
+	public function testIsImage()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+
+		$file = new NativeFile(array(
+			'tmp_name' => $path,
+			'name' => 'テスト.jpg',
+			'error' => \UPLOAD_ERR_OK,
+		));
+
+		$this->assertTrue($file->isImage());
+
+	}
+
+	public function testIsNotImage()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is-text.png');
+
+		$file = new NativeFile(array(
+			'tmp_name' => $path,
+			'name' => 'テスト.jpg',
+			'error' => \UPLOAD_ERR_OK,
+		));
+
+		$this->assertFalse($file->isImage());
+
+	}
+
 	public function testMove()
 	{
 		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
@@ -170,15 +198,18 @@ class NativeFileTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
 	 */
-	public function testGetContentRaiseExceptionWhenUploadedFileIsError()
+	public function testGetContentRaiseExceptionWhenFileIsNotReadable()
 	{
-		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$temp_path = $this->copyToTemp($orig_path);
 
 		$file = new NativeFile(array(
-			'tmp_name' => $path,
+			'tmp_name' => $temp_path,
 			'name' => 'テスト.jpg',
-			'error' => \UPLOAD_ERR_CANT_WRITE,
+			'error' => \UPLOAD_ERR_OK,
 		));
+
+		unlink($temp_path);
 
 		$file->getContent();
 	}

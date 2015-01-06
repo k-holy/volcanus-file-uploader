@@ -126,6 +126,44 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 
 	}
 
+	public function testIsImage()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_OK,
+				$test = true
+			)
+		);
+
+		$this->assertTrue($file->isImage());
+
+	}
+
+	public function testIsNotImage()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is-text.png');
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_OK,
+				$test = true
+			)
+		);
+
+		$this->assertFalse($file->isImage());
+
+	}
+
 	public function testMove()
 	{
 		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
@@ -212,20 +250,23 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
 	 */
-	public function testGetContentRaiseExceptionWhenUploadedFileIsError()
+	public function testGetContentRaiseExceptionWhenFileIsNotReadable()
 	{
-		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$temp_path = $this->copyToTemp($orig_path);
 
 		$file = new SymfonyFile(
 			new UploadedFile(
-				$path,
+				$temp_path,
 				$clientFilename = 'テスト.jpg',
 				$mimeType = null,
 				$size = null,
-				$error = \UPLOAD_ERR_CANT_WRITE,
+				$error = \UPLOAD_ERR_OK,
 				$test = true
 			)
 		);
+
+		unlink($temp_path);
 
 		$file->getContent();
 	}

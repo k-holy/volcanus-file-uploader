@@ -66,6 +66,13 @@ interface FileInterface
 	public function isValid();
 
 	/**
+	 * アップロードファイルが画像かどうかを返します。
+	 *
+	 * @return boolean アップロードファイルが画像かどうか
+	 */
+	public function isImage();
+
+	/**
 	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
 	 *
 	 * @param string 移動先ディレクトリ
