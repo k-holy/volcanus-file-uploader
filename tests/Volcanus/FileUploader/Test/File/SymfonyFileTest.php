@@ -209,6 +209,27 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals(file_get_contents($path), $file->getContent());
 	}
 
+	/**
+	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
+	 */
+	public function testGetContentRaiseExceptionWhenUploadedFileIsError()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_CANT_WRITE,
+				$test = true
+			)
+		);
+
+		$file->getContent();
+	}
+
 	public function testGetContentAsDataUri()
 	{
 		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');

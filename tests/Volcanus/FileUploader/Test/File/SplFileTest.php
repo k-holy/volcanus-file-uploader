@@ -159,6 +159,22 @@ class SplFileTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals(file_get_contents($path), $file->getContent());
 	}
 
+	/**
+	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
+	 */
+	public function testGetContentRaiseExceptionWhenUploadedFileIsError()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+
+		$file = new SplFile(
+			new \SplFileInfo($path),
+			$clientFilename = 'テスト.jpg',
+			$error = \UPLOAD_ERR_CANT_WRITE
+		);
+
+		$file->getContent();
+	}
+
 	public function testGetContentAsDataUri()
 	{
 		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
