@@ -152,6 +152,20 @@ class NativeFile implements FileInterface
 	}
 
 	/**
+	 * アップロードファイルが画像かどうかを返します。
+	 *
+	 * @return boolean アップロードファイルが画像かどうか
+	 */
+	public function isImage()
+	{
+		if (is_file($this->path)) {
+			$imagesize = @getimagesize($this->path);
+			return (isset($imagesize[2]));
+		}
+		return false;
+	}
+
+	/**
 	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
 	 *
 	 * @param string 移動先ディレクトリ
@@ -185,7 +199,7 @@ class NativeFile implements FileInterface
 	 */
 	public function getContent()
 	{
-		if (!$this->isValid()) {
+		if (!is_file($this->path) || !is_readable($this->path)) {
 			throw new FilepathException(
 				sprintf('The file "%s" could not read', $this->path)
 			);

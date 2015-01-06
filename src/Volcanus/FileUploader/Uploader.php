@@ -110,10 +110,29 @@ class Uploader
 	public function validate(FileInterface $file, FileValidator $validator)
 	{
 		$validator->validateUploadError($file);
-		$validator->validateFilename($file);
-		$validator->validateImageType($file);
-		$validator->validateFilesize($file);
-		$validator->validateExtension($file);
+
+		if ($validator->config('filenameEncoding') !== null) {
+			$validator->validateFilename($file);
+		}
+
+		if ($validator->config('maxFilesize') !== null) {
+			$validator->validateFilesize($file);
+		}
+
+		if ($validator->config('allowableType') !== null) {
+			$validator->validateExtension($file);
+		}
+
+		if ($file->isImage()) {
+
+			$validator->validateImageType($file);
+
+			if ($validator->config('maxWidth') !== null || $validator->config('maxHeight') !== null) {
+				$validator->validateImageSize($file);
+			}
+
+		}
+
 		return true;
 	}
 

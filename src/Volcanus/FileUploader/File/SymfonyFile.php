@@ -104,6 +104,20 @@ class SymfonyFile implements FileInterface
 	}
 
 	/**
+	 * アップロードファイルが画像かどうかを返します。
+	 *
+	 * @return boolean アップロードファイルが画像かどうか
+	 */
+	public function isImage()
+	{
+		if ($this->file->isFile()) {
+			$imagesize = @getimagesize($this->file->getPathname());
+			return (isset($imagesize[2]));
+		}
+		return false;
+	}
+
+	/**
 	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
 	 *
 	 * @param string 移動先ディレクトリ
@@ -136,7 +150,7 @@ class SymfonyFile implements FileInterface
 	 */
 	public function getContent()
 	{
-		if (!$this->isValid()) {
+		if (!$this->file->isFile() || !$this->file->isReadable()) {
 			throw new FilepathException(
 				sprintf('The file "%s" could not read', $this->file->getPathname())
 			);
