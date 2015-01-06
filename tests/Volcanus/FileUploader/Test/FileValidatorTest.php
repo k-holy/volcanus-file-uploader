@@ -511,6 +511,9 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
+		$file->expects($this->once())
 			->method('getClientExtension')
 			->will($this->returnValue('gif'));
 		$file->expects($this->once())
@@ -530,6 +533,9 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		));
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
 		$file->expects($this->once())
 			->method('getClientExtension')
 			->will($this->returnValue('jpg'));
@@ -551,6 +557,9 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
+		$file->expects($this->once())
 			->method('getClientExtension')
 			->will($this->returnValue('jpg'));
 		$file->expects($this->once())
@@ -563,7 +572,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$validator->validateImageType($file);
 	}
 
-	public function testValidateImageTypeReturnedWhenExtensionIsNotImage()
+	public function testValidateImageTypeReturnedWhenFileIsNotImage()
 	{
 		$validator = new FileValidator(array(
 			'enableExif' => false,
@@ -571,8 +580,8 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
-			->method('getClientExtension')
-			->will($this->returnValue('txt'));
+			->method('isImage')
+			->will($this->returnValue(false));
 
 		$this->assertNull($validator->validateImageType($file));
 	}
@@ -587,6 +596,9 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		));
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
 		$file->expects($this->once())
 			->method('getClientExtension')
 			->will($this->returnValue('gif'));
@@ -611,6 +623,9 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
+		$file->expects($this->once())
 			->method('getClientExtension')
 			->will($this->returnValue('jpg'));
 		$file->expects($this->once())
@@ -634,6 +649,9 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
+		$file->expects($this->once())
 			->method('getClientExtension')
 			->will($this->returnValue('gif'));
 		$file->expects($this->once())
@@ -655,8 +673,8 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
-			->method('getClientExtension')
-			->will($this->returnValue('jpg'));
+			->method('isImage')
+			->will($this->returnValue(true));
 		$file->expects($this->once())
 			->method('getPath')
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
@@ -672,6 +690,9 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		));
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
 
 		$this->assertNull($validator->validateImageSize($file));
 	}
@@ -685,8 +706,8 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
-			->method('getClientExtension')
-			->will($this->returnValue('txt'));
+			->method('isImage')
+			->will($this->returnValue(false));
 
 		$this->assertNull($validator->validateImageSize($file));
 	}
@@ -703,8 +724,8 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
-			->method('getClientExtension')
-			->will($this->returnValue('jpg'));
+			->method('isImage')
+			->will($this->returnValue(true));
 		$file->expects($this->once())
 			->method('getPath')
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
@@ -724,8 +745,8 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
-			->method('getClientExtension')
-			->will($this->returnValue('jpg'));
+			->method('isImage')
+			->will($this->returnValue(true));
 		$file->expects($this->once())
 			->method('getPath')
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg

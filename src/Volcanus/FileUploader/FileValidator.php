@@ -25,24 +25,6 @@ use Volcanus\FileUploader\Exception\UploaderException;
 class FileValidator
 {
 
-	private static $imageExtensions = array(
-		'gif',
-		'jpeg',
-		'jpg',
-		'png',
-		'swf',
-		'psd',
-		'bmp',
-		'tiff',
-		'jpc',
-		'jp2',
-		'jpf',
-		'swc',
-		'aiff',
-		'wbmp',
-		'xbm',
-	);
-
 	/**
 	 * @var array 設定オプション
 	 */
@@ -296,10 +278,10 @@ class FileValidator
 	 */
 	public function validateImageType(FileInterface $file)
 	{
-		$extension = $file->getClientExtension();
-		if (!in_array(strtolower($extension), self::$imageExtensions)) {
+		if (!$file->isImage()) {
 			return;
 		}
+		$extension = $file->getClientExtension();
 		$mimeType = $file->getMimeType();
 		$imageType = $this->getImageType($file);
 		if (is_int($imageType)) {
@@ -338,13 +320,12 @@ class FileValidator
 	 */
 	public function validateImageSize(FileInterface $file)
 	{
+		if (!$file->isImage()) {
+			return;
+		}
 		$maxWidth = $this->config('maxWidth');
 		$maxHeight = $this->config('maxHeight');
 		if ($maxWidth === null && $maxHeight === null) {
-			return;
-		}
-		$extension = $file->getClientExtension();
-		if (!in_array($extension, self::$imageExtensions)) {
 			return;
 		}
 		$filepath = $file->getPath();
