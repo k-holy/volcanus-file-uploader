@@ -129,4 +129,32 @@ class SymfonyFile implements FileInterface
 		);
 	}
 
+	/**
+	 * アップロードファイルの内容を返します。
+	 *
+	 * @return string ファイルの内容
+	 */
+	public function getContent()
+	{
+		if (!$this->isValid()) {
+			throw new FilepathException(
+				sprintf('The file "%s" could not read', $this->file->getPathname())
+			);
+		}
+		return file_get_contents($this->file->getPathname());
+	}
+
+	/**
+	 * アップロードファイルの内容をDataURI形式で返します。
+	 *
+	 * @return string DataURI
+	 */
+	public function getContentAsDataUri()
+	{
+		return sprintf('data:%s;base64,%s',
+			$this->getMimeType(),
+			base64_encode($this->getContent())
+		);
+	}
+
 }

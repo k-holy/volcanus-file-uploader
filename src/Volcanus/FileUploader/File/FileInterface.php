@@ -74,4 +74,18 @@ interface FileInterface
 	 */
 	public function move($directory, $filename);
 
+	/**
+	 * アップロードファイルの内容を返します。
+	 *
+	 * @return string ファイルの内容
+	 */
+	public function getContent();
+
+	/**
+	 * アップロードファイルの内容をDataURI形式で返します。
+	 *
+	 * @return string DataURI
+	 */
+	public function getContentAsDataUri();
+
 }
