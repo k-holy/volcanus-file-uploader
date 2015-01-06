@@ -191,6 +191,42 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 		$file->move(__DIR__, 'test.jpg');
 	}
 
+	public function testGetContent()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_OK,
+				$test = true
+			)
+		);
+
+		$this->assertEquals(file_get_contents($path), $file->getContent());
+	}
+
+	public function testGetContentAsDataUri()
+	{
+		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_OK,
+				$test = true
+			)
+		);
+
+		$this->assertStringStartsWith('data:image/jpeg;base64,', $file->getContentAsDataUri());
+	}
+
 	private function copyToTemp($path)
 	{
 		$temp_path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . basename($path);
