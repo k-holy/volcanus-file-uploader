@@ -111,7 +111,7 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 		$moved_path = $uploader->move($file);
 
-		$this->assertRegExp('~/[a-z0-9]{13}\.jpg\z~i', $moved_path);
+		$this->assertRegExp('~/[a-f0-9]{40}\.jpg\z~i', $moved_path);
 	}
 
 	/**

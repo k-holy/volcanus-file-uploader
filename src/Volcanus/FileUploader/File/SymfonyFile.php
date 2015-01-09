@@ -128,7 +128,7 @@ class SymfonyFile implements FileInterface
 	{
 		$source = $this->file->getPathname();
 		$destination = rtrim($directory, '/\\') . \DIRECTORY_SEPARATOR . $filename;
-		if ($this->file->isValid()) {
+		if ($this->file->isValid() && !file_exists($destination)) {
 			try {
 				$file = $this->file->move($directory, $filename);
 				return $file->getPathname();

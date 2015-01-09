@@ -152,7 +152,7 @@ class Uploader
 			$this->prepareMove($moveDirectory);
 			$extension = $file->getClientExtension();
 			while ($moveRetry > 0) {
-				$filename = uniqid();
+				$filename = sha1(uniqid(mt_rand(), true));
 				if (strlen($extension) >= 1) {
 					$filename .= '.' . $extension;
 				}

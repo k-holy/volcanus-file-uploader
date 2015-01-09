@@ -18,6 +18,18 @@ use Volcanus\FileUploader\File\NativeFile;
 class NativeFileTest extends \PHPUnit_Framework_TestCase
 {
 
+	private $tempDir;
+
+	public function setUp()
+	{
+		$this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
+	}
+
+	public function tearDown()
+	{
+		$this->cleanTemp();
+	}
+
 	/**
 	 * @expectedException \InvalidArgumentException
 	 */
@@ -159,11 +171,29 @@ class NativeFileTest extends \PHPUnit_Framework_TestCase
 			'error' => \UPLOAD_ERR_OK,
 		));
 
-		$moved_path = $file->move(__DIR__, 'test.jpg');
+		$moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
 		$this->assertFileEquals($moved_path, $orig_path);
 		$this->assertFileNotExists($temp_path);
-		unlink($moved_path);
+	}
+
+	/**
+	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
+	 */
+	public function testMoveRaiseExceptionWhenAlreadyExists()
+	{
+		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$temp_path = $this->copyToTemp($orig_path);
+
+		file_put_contents($this->tempDir . DIRECTORY_SEPARATOR . 'test.jpg', '');
+
+		$file = new NativeFile(array(
+			'tmp_name' => $temp_path,
+			'name' => 'テスト.jpg',
+			'error' => \UPLOAD_ERR_OK,
+		));
+
+		$file->move($this->tempDir, 'test.jpg');
 	}
 
 	/**
@@ -180,7 +210,7 @@ class NativeFileTest extends \PHPUnit_Framework_TestCase
 			'error' => \UPLOAD_ERR_CANT_WRITE,
 		));
 
-		$moved_path = $file->move(__DIR__, 'test.jpg');
+		$file->move($this->tempDir, 'test.jpg');
 	}
 
 	public function testGetContent()
@@ -228,9 +258,21 @@ class NativeFileTest extends \PHPUnit_Framework_TestCase
 
 	private function copyToTemp($path)
 	{
-		$temp_path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . basename($path);
+		$temp_path = $this->tempDir . DIRECTORY_SEPARATOR . basename($path);
 		copy($path, $temp_path);
 		return $temp_path;
+	}
+
+	private function cleanTemp()
+	{
+		$it = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($this->tempDir)
+		);
+		foreach ($it as $file) {
+			if ($file->isFile() && $file->getBaseName() !== '.gitignore') {
+				unlink($file);
+			}
+		}
 	}
 
 }
