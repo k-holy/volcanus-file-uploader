@@ -172,7 +172,7 @@ class SplFile implements FileInterface
 				sprintf('The file could not move "%s" -> "%s"', $source, $destination)
 			);
 		}
-		if (false === @rename($source, $destination)) {
+		if (file_exists($destination) || !@rename($source, $destination)) {
 			$error = error_get_last();
 			$message = (isset($error['message'])) ? sprintf(' (%s)', strip_tags($error['message'])) : '';
 			throw new FilepathException(

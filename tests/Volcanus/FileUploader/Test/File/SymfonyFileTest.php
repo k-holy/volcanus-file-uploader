@@ -20,6 +20,13 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 {
 
+	private $tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
+
+	public function tearDown()
+	{
+		$this->cleanTemp();
+	}
+
 	public function testGetPath()
 	{
 		$path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
@@ -180,11 +187,34 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 			)
 		);
 
-		$moved_path = $file->move(__DIR__, 'test.jpg');
+		$moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
 		$this->assertFileEquals($moved_path, $orig_path);
 		$this->assertFileNotExists($temp_path);
-		unlink($moved_path);
+	}
+
+	/**
+	 * @expectedException \Volcanus\FileUploader\Exception\FilepathException
+	 */
+	public function testMoveRaiseExceptionWhenAlreadyExists()
+	{
+		$orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
+		$temp_path = $this->copyToTemp($orig_path);
+
+		file_put_contents($this->tempDir . DIRECTORY_SEPARATOR . 'test.jpg', '');
+
+		$file = new SymfonyFile(
+			new UploadedFile(
+				$temp_path,
+				$clientFilename = 'テスト.jpg',
+				$mimeType = null,
+				$size = null,
+				$error = \UPLOAD_ERR_OK,
+				$test = true
+			)
+		);
+
+		$file->move($this->tempDir, 'test.jpg');
 	}
 
 	/**
@@ -206,7 +236,7 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 			)
 		);
 
-		$file->move(__DIR__, 'test.jpg');
+		$file->move($this->tempDir, 'test.jpg');
 	}
 
 	/**
@@ -226,7 +256,7 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 
 		$file = new SymfonyFile($uploadedFile);
 
-		$file->move(__DIR__, 'test.jpg');
+		$moved_path = $file->move($this->tempDir, 'test.jpg');
 	}
 
 	public function testGetContent()
@@ -291,9 +321,21 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 
 	private function copyToTemp($path)
 	{
-		$temp_path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . basename($path);
+		$temp_path = $this->tempDir . DIRECTORY_SEPARATOR . basename($path);
 		copy($path, $temp_path);
 		return $temp_path;
+	}
+
+	private function cleanTemp()
+	{
+		$it = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($this->tempDir)
+		);
+		foreach ($it as $file) {
+			if ($file->isFile() && $file->getBaseName() !== '.gitignore') {
+				unlink($file);
+			}
+		}
 	}
 
 }
