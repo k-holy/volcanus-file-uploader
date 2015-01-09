@@ -18,7 +18,12 @@ use Volcanus\FileUploader\File\SplFile;
 class SplFileTest extends \PHPUnit_Framework_TestCase
 {
 
-	private $tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
+	private $tempDir;
+
+	public function setUp()
+	{
+		$this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
+	}
 
 	public function tearDown()
 	{

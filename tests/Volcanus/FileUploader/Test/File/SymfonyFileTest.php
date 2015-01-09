@@ -20,7 +20,12 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 {
 
-	private $tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
+	private $tempDir;
+
+	public function setUp()
+	{
+		$this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
+	}
 
 	public function tearDown()
 	{
