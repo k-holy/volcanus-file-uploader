@@ -31,6 +31,11 @@ class FileValidator
 	private $config;
 
 	/**
+	 * @var array エラー
+	 */
+	private $errors;
+
+	/**
 	 * コンストラクタ
 	 *
 	 * @param array | ArrayAccess 設定オプション
@@ -52,6 +57,7 @@ class FileValidator
 		$this->config['enableGmp'] = extension_loaded('gmp');
 		$this->config['enableBcmath'] = extension_loaded('bcmath');
 		$this->config['enableExif'] = extension_loaded('exif');
+		$this->config['throwExceptionOnValidate'] = true;
 		$this->config['allowableType'] = null;
 		$this->config['filenameEncoding'] = null;
 		$this->config['maxWidth'] = null;
@@ -62,6 +68,7 @@ class FileValidator
 				$this->config($name, $value);
 			}
 		}
+		$this->errors = array();
 		return $this;
 	}
 
@@ -86,6 +93,7 @@ class FileValidator
 				case 'enableGmp':
 				case 'enableBcmath':
 				case 'enableExif':
+				case 'throwExceptionOnValidate':
 					if (!is_bool($value) && !is_int($value) && !ctype_digit($value)) {
 						throw new \InvalidArgumentException(
 							sprintf('The config parameter "%s" accepts boolean or numeric.', $name));
@@ -127,27 +135,68 @@ class FileValidator
 	}
 
 	/**
+	 * 現在のエラーがあるかどうかを返します。
+	 *
+	 * @return boolean
+	 */
+	public function hasError()
+	{
+		return (count($this->errors) > 0);
+	}
+
+	/**
+	 * 現在のエラーを返します。
+	 *
+	 * @return array
+	 */
+	public function getErrors()
+	{
+		return $this->errors;
+	}
+
+	/**
+	 * 現在のエラーをクリアします。
+	 *
+	 * @return this
+	 */
+	public function clearErrors()
+	{
+		$this->errors = array();
+		return $this;
+	}
+
+	/**
 	 * アップロードエラー定数を検証します。
 	 *
 	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
+	 * @return boolean 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
 	 * @throws \Volcanus\FileUploader\Exception\UploaderException その他クライアント側で回避不能なエラーの場合
 	 */
 	public function validateUploadError(FileInterface $file)
 	{
+		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		switch ($file->getError()) {
 		// エラーはなく、ファイルアップロードは成功しています。
 		case \UPLOAD_ERR_OK:
 			return true;
 		// アップロードされたファイルは、php.ini の upload_max_filesize ディレクティブの値を超えています。
 		case \UPLOAD_ERR_INI_SIZE:
-			throw new FilesizeException(
-				sprintf('The uploaded file is larger than upload_max_filesize:%d.', ini_get('upload_max_filesize'))
-			);
+			$this->errors['filesize'] = 'upload_max_filesize';
+			if ($throwExceptionOnValidate) {
+				throw new FilesizeException(
+					sprintf('The uploaded file is larger than upload_max_filesize:%d.', ini_get('upload_max_filesize'))
+				);
+			}
+			return false;
 		// アップロードされたファイルは、HTML フォームで指定された MAX_FILE_SIZE を超えています。
 		case \UPLOAD_ERR_FORM_SIZE:
-			throw new FilesizeException('The uploaded file is larger than requested MAX_FILE_SIZE.');
+			$this->errors['filesize'] = 'MAX_FILE_SIZE';
+			if ($throwExceptionOnValidate) {
+				throw new FilesizeException('The uploaded file is larger than requested MAX_FILE_SIZE.');
+			}
+			return false;
 		// アップロードされたファイルは一部のみしかアップロードされていません。
 		case \UPLOAD_ERR_PARTIAL:
 		// ファイルはアップロードされませんでした。
@@ -161,7 +210,11 @@ class FileValidator
 		default:
 			break;
 		}
-		throw new UploaderException('The uploaded file is invalid for some reasons.');
+		$this->errors['uploader'] = 'some reasons';
+		if ($throwExceptionOnValidate) {
+			throw new UploaderException('The uploaded file is invalid for some reasons.');
+		}
+		return false;
 	}
 
 	/**
@@ -178,12 +231,18 @@ class FileValidator
 		if ($encoding === null) {
 			return;
 		}
-		if (mb_check_encoding($file->getClientFilename(), $encoding)) {
+		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
+		$filename = $file->getClientFilename();
+		if (mb_check_encoding($filename, $encoding)) {
 			return true;
 		}
-		throw new FilenameException(
-			sprintf('The filename is including invalid bytes for encoding:%s.', $encoding)
-		);
+		$this->errors['filename'] = $filename;
+		if ($throwExceptionOnValidate) {
+			throw new FilenameException(
+				sprintf('The filename is including invalid bytes for encoding:%s.', $encoding)
+			);
+		}
+		return false;
 	}
 
 	/**
@@ -202,6 +261,7 @@ class FileValidator
 		if ($maxFilesize === null) {
 			return;
 		}
+		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$maxBytes = (is_string($maxFilesize))
 			? $this->convertToBytes($maxFilesize)
 			: $maxFilesize;
@@ -225,9 +285,13 @@ class FileValidator
 		} elseif ($filesize <= $maxBytes) {
 			return true;
 		}
-		throw new FilesizeException(
-			sprintf('The uploaded file\'s size %s bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
-		);
+		$this->errors['filesize'] = $filesize;
+		if ($throwExceptionOnValidate) {
+			throw new FilesizeException(
+				sprintf('The uploaded file\'s size %s bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
+			);
+		}
+		return false;
 	}
 
 	/**
@@ -244,6 +308,7 @@ class FileValidator
 		if ($allowableType === null) {
 			return;
 		}
+		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$allowableTypes = explode(',', $allowableType);
 		$extension = $file->getClientExtension();
 		foreach ($allowableTypes as $type) {
@@ -263,9 +328,13 @@ class FileValidator
 				break;
 			}
 		}
-		throw new ExtensionException(
-			sprintf('The uploaded file\'s extension "%s" is not allowable', $extension)
-		);
+		$this->errors['extension'] = $extension;
+		if ($throwExceptionOnValidate) {
+			throw new ExtensionException(
+				sprintf('The uploaded file\'s extension "%s" is not allowable', $extension)
+			);
+		}
+		return false;
 	}
 
 	/**
@@ -281,6 +350,7 @@ class FileValidator
 		if (!$file->isImage()) {
 			return;
 		}
+		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$extension = $file->getClientExtension();
 		$mimeType = $file->getMimeType();
 		$imageType = $this->getImageType($file);
@@ -303,9 +373,13 @@ class FileValidator
 				break;
 			}
 		}
-		throw new ImageTypeException(
-			sprintf('The file extension "%s" does not match ImageType.', $extension)
-		);
+		$this->errors['imageType'] = $imageType;
+		if ($throwExceptionOnValidate) {
+			throw new ImageTypeException(
+				sprintf('The file extension "%s" does not match ImageType.', $extension)
+			);
+		}
+		return false;
 	}
 
 	/**
@@ -323,6 +397,7 @@ class FileValidator
 		if (!$file->isImage()) {
 			return;
 		}
+		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$maxWidth = $this->config('maxWidth');
 		$maxHeight = $this->config('maxHeight');
 		if ($maxWidth === null && $maxHeight === null) {
@@ -331,16 +406,23 @@ class FileValidator
 		$filepath = $file->getPath();
 		if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
 			if (!empty($maxWidth) && $width > $maxWidth) {
-				throw new ImageWidthException(
-					sprintf('The image width %d pixels is larger than maxWidth:%d', $width, $maxWidth)
-				);
+				$this->errors['imageWidth'] = $width;
+				if ($throwExceptionOnValidate) {
+					throw new ImageWidthException(
+						sprintf('The image width %d pixels is larger than maxWidth:%d', $width, $maxWidth)
+					);
+				}
 			}
 			if (!empty($maxHeight) && $height > $maxHeight) {
-				throw new ImageHeightException(
-					sprintf('The image height %d pixels is larger than maxHeight:%d', $height, $maxHeight)
-				);
+				$this->errors['imageHeight'] = $height;
+				if ($throwExceptionOnValidate) {
+					throw new ImageHeightException(
+						sprintf('The image height %d pixels is larger than maxHeight:%d', $height, $maxHeight)
+					);
+				}
 			}
-			return true;
+			return (isset($this->errors['imageWidth']) || isset($this->errors['imageHeight']))
+				? false : true;
 		}
 		throw new \InvalidArgumentException(
 			sprintf('The filepath "%s" is invalid image.', $filepath)
