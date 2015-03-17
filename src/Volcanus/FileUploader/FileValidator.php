@@ -271,6 +271,9 @@ class FileValidator
 			);
 		}
 		$filesize = $file->getSize();
+		if ($filesize === null) {
+			return;
+		}
 		if ($filesize < 0) {
 			$filesize = sprintf('%u', $filesize);
 		}
