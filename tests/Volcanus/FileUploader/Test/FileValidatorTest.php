@@ -272,6 +272,38 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
+	 * @expectedException \Volcanus\FileUploader\Exception\NotFoundException
+	 */
+	public function testValidateUploadErrorRaiseExceptionWhenUploadErrNoFile()
+	{
+		$validator = new FileValidator(array(
+			'throwExceptionOnValidate' => true,
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getError')
+			->will($this->returnValue(\UPLOAD_ERR_NO_FILE));
+
+		$validator->validateUploadError($file);
+	}
+
+	public function testValidateUploadErrorReturnFalseWhenUploadErrNoFile()
+	{
+		$validator = new FileValidator(array(
+			'throwExceptionOnValidate' => false,
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getError')
+			->will($this->returnValue(\UPLOAD_ERR_NO_FILE));
+
+		$this->assertFalse($validator->validateUploadError($file));
+		$this->assertTrue($validator->hasError('notFound'));
+	}
+
+	/**
 	 * @expectedException \Volcanus\FileUploader\Exception\FilesizeException
 	 */
 	public function testValidateUploadErrorRaiseExceptionWhenUploadErrIniSize()
@@ -300,8 +332,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(\UPLOAD_ERR_INI_SIZE));
 
 		$this->assertFalse($validator->validateUploadError($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('filesize', $validator->getErrors());
+		$this->assertTrue($validator->hasError('filesize'));
 	}
 
 	/**
@@ -333,8 +364,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(\UPLOAD_ERR_FORM_SIZE));
 
 		$this->assertFalse($validator->validateUploadError($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('filesize', $validator->getErrors());
+		$this->assertTrue($validator->hasError('filesize'));
 	}
 
 	/**
@@ -366,8 +396,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(\UPLOAD_ERR_PARTIAL));
 
 		$this->assertFalse($validator->validateUploadError($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('uploader', $validator->getErrors());
+		$this->assertTrue($validator->hasError('uploader'));
 	}
 
 	public function testValidateFilename()
@@ -426,8 +455,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue("\0xfc\xbf\xbf\xbf\xbf\xbf". '.jpg'));
 
 		$this->assertFalse($validator->validateFilename($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('filename', $validator->getErrors());
+		$this->assertTrue($validator->hasError('filename'));
 	}
 
 	public function testValidateFilesize()
@@ -536,8 +564,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(1025));
 
 		$this->assertFalse($validator->validateFilesize($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('filesize', $validator->getErrors());
+		$this->assertTrue($validator->hasError('filesize'));
 	}
 
 	public function testValidateExtension()
@@ -619,8 +646,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue('gif'));
 
 		$this->assertFalse($validator->validateExtension($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('extension', $validator->getErrors());
+		$this->assertTrue($validator->hasError('extension'));
 	}
 
 	public function testValidateImageTypeGif()
@@ -807,8 +833,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is-text.png'))); // text
 
 		$this->assertFalse($validator->validateImageType($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('imageType', $validator->getErrors());
+		$this->assertTrue($validator->hasError('imageType'));
 	}
 
 	public function testValidateImageSize()
@@ -898,8 +923,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
 
 		$this->assertFalse($validator->validateImageSize($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('imageWidth', $validator->getErrors());
+		$this->assertTrue($validator->hasError('imageWidth'));
 	}
 
 	/**
@@ -941,8 +965,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
 
 		$this->assertFalse($validator->validateImageSize($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('imageHeight', $validator->getErrors());
+		$this->assertTrue($validator->hasError('imageHeight'));
 	}
 
 	public function testValidateImageSizeReturnFalseWhenLargerThanMaxWidthAndMaxHeight()
@@ -962,9 +985,8 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 			->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
 
 		$this->assertFalse($validator->validateImageSize($file));
-		$this->assertTrue($validator->hasError());
-		$this->assertArrayHasKey('imageWidth' , $validator->getErrors());
-		$this->assertArrayHasKey('imageHeight', $validator->getErrors());
+		$this->assertTrue($validator->hasError('imageWidth'));
+		$this->assertTrue($validator->hasError('imageHeight'));
 	}
 
 	public function testClearErrors()
@@ -976,7 +998,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('getError')
-			->will($this->returnValue(\UPLOAD_ERR_INI_SIZE));
+			->will($this->returnValue(\UPLOAD_ERR_NO_FILE));
 
 		$validator->validateUploadError($file);
 		$this->assertTrue($validator->hasError());
