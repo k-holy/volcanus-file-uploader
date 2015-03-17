@@ -522,6 +522,20 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($validator->validateFilesize($file));
 	}
 
+	public function testValidateFilesizeReturnedWhenFilesizeIsNull()
+	{
+		$validator = new FileValidator(array(
+			'maxFilesize' => '2G',
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getSize')
+			->will($this->returnValue(null));
+
+		$this->assertNull($validator->validateFilesize($file));
+	}
+
 	public function testValidateFilesizeReturnedWhenMaxFilesizeIsNotSet()
 	{
 		$validator = new FileValidator(array(
