@@ -250,14 +250,17 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 	public function testMoveRaiseExceptionWhenUploadedFileThrowFileException()
 	{
 		$uploadedFile = $this->getMockBuilder('\Symfony\Component\HttpFoundation\File\UploadedFile')
-			->disableOriginalConstructor()
+			->enableOriginalConstructor()
+			->setConstructorArgs(array(tempnam(sys_get_temp_dir(), ''), 'dummy'))
 			->getMock();
 		$uploadedFile->expects($this->once())
 			->method('isValid')
 			->will($this->returnValue(true));
 		$uploadedFile->expects($this->any())
 			->method('move')
-			->will($this->throwException(new \Symfony\Component\HttpFoundation\File\Exception\FileException()));
+			->will($this->throwException(
+				new \Symfony\Component\HttpFoundation\File\Exception\FileException()
+			));
 
 		$file = new SymfonyFile($uploadedFile);
 
