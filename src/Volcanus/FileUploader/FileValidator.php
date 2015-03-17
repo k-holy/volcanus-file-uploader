@@ -136,23 +136,17 @@ class FileValidator
 	}
 
 	/**
-	 * 現在のエラーがあるかどうかを返します。
+	 * 現在のエラーまたは指定された種別のエラーがあるかどうかを返します。
 	 *
+	 * @param string エラー種別 (例外のクラス名に対応) uploader | notFound | filesize | filename | filesize | extension | imageType | imageWidth | imageHeight
 	 * @return boolean
 	 */
-	public function hasError()
+	public function hasError($name = null)
 	{
-		return (count($this->errors) > 0);
-	}
-
-	/**
-	 * 現在のエラーを返します。
-	 *
-	 * @return array
-	 */
-	public function getErrors()
-	{
-		return $this->errors;
+		if ($name === null) {
+			return (count($this->errors) > 0);
+		}
+		return array_key_exists($name, $this->errors);
 	}
 
 	/**
@@ -184,14 +178,14 @@ class FileValidator
 			return true;
 		// ファイルはアップロードされませんでした。
 		case \UPLOAD_ERR_NO_FILE:
-			$this->errors['notFound'] = $file->getPath();
+			$this->errors['notFound'] = 1;
 			if ($throwExceptionOnValidate) {
 				throw new NotFoundException('No uploaded files.');
 			}
 			return false;
 		// アップロードされたファイルは、php.ini の upload_max_filesize ディレクティブの値を超えています。
 		case \UPLOAD_ERR_INI_SIZE:
-			$this->errors['filesize'] = 'upload_max_filesize';
+			$this->errors['filesize'] = 1;
 			if ($throwExceptionOnValidate) {
 				throw new FilesizeException(
 					sprintf('The uploaded file is larger than upload_max_filesize:%d.', ini_get('upload_max_filesize'))
@@ -200,7 +194,7 @@ class FileValidator
 			return false;
 		// アップロードされたファイルは、HTML フォームで指定された MAX_FILE_SIZE を超えています。
 		case \UPLOAD_ERR_FORM_SIZE:
-			$this->errors['filesize'] = 'MAX_FILE_SIZE';
+			$this->errors['filesize'] = 1;
 			if ($throwExceptionOnValidate) {
 				throw new FilesizeException('The uploaded file is larger than requested MAX_FILE_SIZE.');
 			}
@@ -216,7 +210,7 @@ class FileValidator
 		default:
 			break;
 		}
-		$this->errors['uploader'] = 'some reasons';
+		$this->errors['uploader'] = 1;
 		if ($throwExceptionOnValidate) {
 			throw new UploaderException('The uploaded file is invalid for some reasons.');
 		}
