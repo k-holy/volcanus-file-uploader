@@ -109,6 +109,9 @@ class Uploader
 	 */
 	public function validate(FileInterface $file, FileValidator $validator)
 	{
+
+		$validator->clearErrors();
+
 		$validator->validateUploadError($file);
 
 		if ($validator->config('filenameEncoding') !== null) {
@@ -133,7 +136,7 @@ class Uploader
 
 		}
 
-		return true;
+		return $validator->hasError() ? false : true;
 	}
 
 	/**
