@@ -63,25 +63,152 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals($directory, $uploader->config('moveDirectory'));
 	}
 
-	public function testValidate()
+	public function testValidateCallClearErrors()
 	{
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
 
 		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
-		$validator->expects($this->any())
+
+		$validator->expects($this->once())
+			->method('clearErrors');
+
+		$uploader = new Uploader();
+
+		$this->assertTrue($uploader->validate($file, $validator));
+	}
+
+	public function testValidateCallValidateUploadError()
+	{
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+
+		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+
+		$validator->expects($this->once())
 			->method('validateUploadError')
 			->will($this->returnValue(true));
-		$validator->expects($this->any())
+
+		$uploader = new Uploader();
+
+		$this->assertTrue($uploader->validate($file, $validator));
+	}
+
+	public function testValidateCallValidateFilenameWhenConfigHasFilenameEncoding()
+	{
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+
+		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+
+		$validator->expects($this->at(2))
+			->method('config')
+			->with($this->identicalTo('filenameEncoding'))
+			->will($this->returnValue('UTF-8'));
+
+		$validator->expects($this->once())
 			->method('validateFilename')
 			->will($this->returnValue(true));
-		$validator->expects($this->any())
-			->method('validateImageType')
-			->will($this->returnValue(true));
-		$validator->expects($this->any())
+
+		$uploader = new Uploader();
+
+		$this->assertTrue($uploader->validate($file, $validator));
+	}
+
+	public function testValidateCallValidateFilesizeWhenConfigHasMaxFilesize()
+	{
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+
+		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+
+		$validator->expects($this->at(3))
+			->method('config')
+			->with($this->identicalTo('maxFilesize'))
+			->will($this->returnValue('1M'));
+
+		$validator->expects($this->once())
 			->method('validateFilesize')
 			->will($this->returnValue(true));
-		$validator->expects($this->any())
+
+		$uploader = new Uploader();
+
+		$this->assertTrue($uploader->validate($file, $validator));
+	}
+
+	public function testValidateCallValidateExtensionWhenConfigHasAllowableType()
+	{
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+
+		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+
+		$validator->expects($this->at(4))
+			->method('config')
+			->with($this->identicalTo('allowableType'))
+			->will($this->returnValue('jpg'));
+
+		$validator->expects($this->once())
 			->method('validateExtension')
+			->will($this->returnValue(true));
+
+		$uploader = new Uploader();
+
+		$this->assertTrue($uploader->validate($file, $validator));
+	}
+
+	public function testValidateCallValidateImageTypeWhenFileIsImage()
+	{
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
+
+		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+
+		$validator->expects($this->once())
+			->method('validateImageType')
+			->will($this->returnValue(true));
+
+		$uploader = new Uploader();
+
+		$this->assertTrue($uploader->validate($file, $validator));
+	}
+
+	public function testValidateCallValidateImageSizeWhenFileIsImageAndConfigHasMaxWidth()
+	{
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
+
+		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+
+		$validator->expects($this->at(6))
+			->method('config')
+			->with($this->identicalTo('maxWidth'))
+			->will($this->returnValue(180));
+
+		$validator->expects($this->once())
+			->method('validateImageSize')
+			->will($this->returnValue(true));
+
+		$uploader = new Uploader();
+
+		$this->assertTrue($uploader->validate($file, $validator));
+	}
+
+	public function testValidateCallValidateImageSizeWhenFileIsImageAndConfigHasMaxHeight()
+	{
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('isImage')
+			->will($this->returnValue(true));
+
+		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+
+		$validator->expects($this->at(7))
+			->method('config')
+			->with($this->identicalTo('maxHeight'))
+			->will($this->returnValue(180));
+
+		$validator->expects($this->once())
+			->method('validateImageSize')
 			->will($this->returnValue(true));
 
 		$uploader = new Uploader();
