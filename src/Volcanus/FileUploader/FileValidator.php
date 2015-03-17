@@ -10,6 +10,7 @@ namespace Volcanus\FileUploader;
 
 use Volcanus\FileUploader\File\FileInterface;
 use Volcanus\FileUploader\Exception\FilenameException;
+use Volcanus\FileUploader\Exception\NotFoundException;
 use Volcanus\FileUploader\Exception\FilesizeException;
 use Volcanus\FileUploader\Exception\ExtensionException;
 use Volcanus\FileUploader\Exception\ImageTypeException;
@@ -181,6 +182,13 @@ class FileValidator
 		// エラーはなく、ファイルアップロードは成功しています。
 		case \UPLOAD_ERR_OK:
 			return true;
+		// ファイルはアップロードされませんでした。
+		case \UPLOAD_ERR_NO_FILE:
+			$this->errors['notFound'] = $file->getPath();
+			if ($throwExceptionOnValidate) {
+				throw new NotFoundException('No uploaded files.');
+			}
+			return false;
 		// アップロードされたファイルは、php.ini の upload_max_filesize ディレクティブの値を超えています。
 		case \UPLOAD_ERR_INI_SIZE:
 			$this->errors['filesize'] = 'upload_max_filesize';
@@ -199,8 +207,6 @@ class FileValidator
 			return false;
 		// アップロードされたファイルは一部のみしかアップロードされていません。
 		case \UPLOAD_ERR_PARTIAL:
-		// ファイルはアップロードされませんでした。
-		case \UPLOAD_ERR_NO_FILE:
 		// テンポラリフォルダがありません。
 		case \UPLOAD_ERR_NO_TMP_DIR:
 		// ディスクへの書き込みに失敗しました。
