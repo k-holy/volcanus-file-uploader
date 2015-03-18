@@ -231,13 +231,15 @@ class FileValidator
 		if ($encoding === null) {
 			return;
 		}
-		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$filename = $file->getClientFilename();
+		if ($filename === null || strlen($filename) === 0) {
+			return;
+		}
 		if (mb_check_encoding($filename, $encoding)) {
 			return true;
 		}
 		$this->errors['filename'] = $filename;
-		if ($throwExceptionOnValidate) {
+		if ($this->config('throwExceptionOnValidate')) {
 			throw new FilenameException(
 				sprintf('The filename is including invalid bytes for encoding:%s.', $encoding)
 			);
@@ -261,7 +263,6 @@ class FileValidator
 		if ($maxFilesize === null) {
 			return;
 		}
-		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$maxBytes = (is_string($maxFilesize))
 			? $this->convertToBytes($maxFilesize)
 			: $maxFilesize;
@@ -271,7 +272,7 @@ class FileValidator
 			);
 		}
 		$filesize = $file->getSize();
-		if ($filesize === null) {
+		if ($filesize === null || $filesize === 0) {
 			return;
 		}
 		if ($filesize < 0) {
@@ -289,7 +290,7 @@ class FileValidator
 			return true;
 		}
 		$this->errors['filesize'] = $filesize;
-		if ($throwExceptionOnValidate) {
+		if ($this->config('throwExceptionOnValidate')) {
 			throw new FilesizeException(
 				sprintf('The uploaded file\'s size %s bytes is larger than maxFilesize:"%s"', $filesize, $maxFilesize)
 			);
@@ -311,9 +312,11 @@ class FileValidator
 		if ($allowableType === null) {
 			return;
 		}
-		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
-		$allowableTypes = explode(',', $allowableType);
 		$extension = $file->getClientExtension();
+		if ($extension === null || strlen($extension) === 0) {
+			return;
+		}
+		$allowableTypes = explode(',', $allowableType);
 		foreach ($allowableTypes as $type) {
 			switch ($type) {
 			case 'jpeg':
@@ -332,7 +335,7 @@ class FileValidator
 			}
 		}
 		$this->errors['extension'] = $extension;
-		if ($throwExceptionOnValidate) {
+		if ($this->config('throwExceptionOnValidate')) {
 			throw new ExtensionException(
 				sprintf('The uploaded file\'s extension "%s" is not allowable', $extension)
 			);
@@ -353,7 +356,6 @@ class FileValidator
 		if (!$file->isImage()) {
 			return;
 		}
-		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$extension = $file->getClientExtension();
 		$mimeType = $file->getMimeType();
 		$imageType = $this->getImageType($file);
@@ -377,7 +379,7 @@ class FileValidator
 			}
 		}
 		$this->errors['imageType'] = $imageType;
-		if ($throwExceptionOnValidate) {
+		if ($this->config('throwExceptionOnValidate')) {
 			throw new ImageTypeException(
 				sprintf('The file extension "%s" does not match ImageType.', $extension)
 			);

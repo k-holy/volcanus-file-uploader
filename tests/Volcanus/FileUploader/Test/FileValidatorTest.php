@@ -458,6 +458,34 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($validator->hasError('filename'));
 	}
 
+	public function testValidateFilenameReturnNullWhenFilenameIsNull()
+	{
+		$validator = new FileValidator(array(
+			'filenameEncoding' => 'UTF-8',
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getClientFilename')
+			->will($this->returnValue(null));
+
+		$this->assertNull($validator->validateFilename($file));
+	}
+
+	public function testValidateFilenameReturnNullWhenFilenameIsEmpty()
+	{
+		$validator = new FileValidator(array(
+			'filenameEncoding' => 'UTF-8',
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getClientFilename')
+			->will($this->returnValue(''));
+
+		$this->assertNull($validator->validateFilename($file));
+	}
+
 	public function testValidateFilesize()
 	{
 		$validator = new FileValidator(array(
@@ -522,7 +550,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($validator->validateFilesize($file));
 	}
 
-	public function testValidateFilesizeReturnedWhenFilesizeIsNull()
+	public function testValidateFilesizeReturnNullWhenFilesizeIsNull()
 	{
 		$validator = new FileValidator(array(
 			'maxFilesize' => '2G',
@@ -536,7 +564,21 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertNull($validator->validateFilesize($file));
 	}
 
-	public function testValidateFilesizeReturnedWhenMaxFilesizeIsNotSet()
+	public function testValidateFilesizeReturnNullWhenFilesizeIsZero()
+	{
+		$validator = new FileValidator(array(
+			'maxFilesize' => '2G',
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getSize')
+			->will($this->returnValue(0));
+
+		$this->assertNull($validator->validateFilesize($file));
+	}
+
+	public function testValidateFilesizeReturnNullWhenMaxFilesizeIsNotSet()
 	{
 		$validator = new FileValidator(array(
 			'maxFilesize' => null,
@@ -618,13 +660,41 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($validator->validateExtension($file));
 	}
 
-	public function testValidateExtensionReturnedWhenAllowableTypeIsNotSet()
+	public function testValidateExtensionReturnNullWhenAllowableTypeIsNotSet()
 	{
 		$validator = new FileValidator(array(
 			'allowableType' => null,
 		));
 
 		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+
+		$this->assertNull($validator->validateExtension($file));
+	}
+
+	public function testValidateExtensionReturnNullWhenClientExtensionIsNotSet()
+	{
+		$validator = new FileValidator(array(
+			'allowableType' => 'jpeg,png',
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getClientExtension')
+			->will($this->returnValue(null));
+
+		$this->assertNull($validator->validateExtension($file));
+	}
+
+	public function testValidateExtensionReturnNullWhenClientExtensionIsEmpty()
+	{
+		$validator = new FileValidator(array(
+			'allowableType' => 'jpeg,png',
+		));
+
+		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+		$file->expects($this->once())
+			->method('getClientExtension')
+			->will($this->returnValue(''));
 
 		$this->assertNull($validator->validateExtension($file));
 	}
@@ -732,7 +802,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$validator->validateImageType($file);
 	}
 
-	public function testValidateImageTypeReturnedWhenFileIsNotImage()
+	public function testValidateImageTypeReturnNullWhenFileIsNotImage()
 	{
 		$validator = new FileValidator(array(
 			'enableExif' => false,
@@ -868,7 +938,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue($validator->validateImageSize($file));
 	}
 
-	public function testValidateImageSizeReturnedWhenMaxWidthAndMaxHeightIsNotSet()
+	public function testValidateImageSizeReturnNullWhenMaxWidthAndMaxHeightIsNotSet()
 	{
 		$validator = new FileValidator(array(
 			'maxWidth'  => null,
@@ -883,7 +953,7 @@ class FileValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertNull($validator->validateImageSize($file));
 	}
 
-	public function testValidateImageSizeReturnedWhenExtensionIsNotImage()
+	public function testValidateImageSizeReturnNullWhenExtensionIsNotImage()
 	{
 		$validator = new FileValidator(array(
 			'maxWidth'  => 180,
