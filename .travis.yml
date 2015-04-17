@@ -8,6 +8,8 @@ php:
   - 5.6
 
 before_script:
+  - composer self-update
+  - composer require satooshi/php-coveralls:0.* --dev
   - composer install --dev --no-interaction --prefer-source
 
 script:

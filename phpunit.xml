@@ -13,11 +13,12 @@
     stopOnFailure="false"
     stopOnIncomplete="false"
     stopOnSkipped="false"
+    syntaxCheck="true"
     verbose="true"
 >
     <testsuites>
         <testsuite name="Volcanus_FileUploader">
-            <directory suffix="Test.php">./tests/Volcanus/FileUploader/Test/</directory>
+            <directory suffix="Test.php">./tests/Volcanus/FileUploader/Test</directory>
         </testsuite>
     </testsuites>
     <filter>
