@@ -47,9 +47,9 @@ class SplFile implements FileInterface
 	/**
 	 * コンストラクタ
 	 *
-	 * @param string アップロードされたファイルのパス
-	 * @param string アップロードされたファイルの元のファイル名
-	 * @param int アップロードエラーコード
+	 * @param \SplFileInfo $file アップロードされたファイルのパス
+	 * @param string $clientFilename アップロードされたファイルの元のファイル名
+	 * @param int $error アップロードエラーコード
 	 */
 	public function __construct(\SplFileInfo $file, $clientFilename = null, $error = null)
 	{
@@ -159,9 +159,9 @@ class SplFile implements FileInterface
 	/**
 	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
 	 *
-	 * @param string 移動先ディレクトリ
-	 * @param string 移動先ファイル名
-	 * @param string 移動先ファイルパス
+	 * @param string $directory 移動先ディレクトリ
+	 * @param string $filename 移動先ファイル名
+	 * @return string 移動先ファイルパス
 	 */
 	public function move($directory, $filename)
 	{

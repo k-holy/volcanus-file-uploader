@@ -39,19 +39,19 @@ class FileValidator
 	/**
 	 * コンストラクタ
 	 *
-	 * @param array | ArrayAccess 設定オプション
+	 * @param array|\ArrayAccess $configurations 設定オプション
 	 */
 	public function __construct($configurations = array())
 	{
 		$this->initialize($configurations);
 	}
 
-	/**
-	 * オブジェクトを初期化します。
-	 *
-	 * @param Symfony\Component\HttpFoundation\File\UploadedFile
-	 * @param array | ArrayAccess 設定オプション
-	 */
+    /**
+     * オブジェクトを初期化します。
+     *
+     * @param array|\ArrayAccess $configurations 設定オプション
+     * @return $this
+     */
 	public function initialize($configurations = array())
 	{
 		$this->config = array();
@@ -77,7 +77,7 @@ class FileValidator
 	 * 引数1の場合は指定された設定の値を返します。
 	 * 引数2の場合は指定された設置の値をセットして$thisを返します。
 	 *
-	 * @param string 設定名
+	 * @param string $name 設定名
 	 * @return mixed 設定値 または $this
 	 *
 	 * @throws \InvalidArgumentException 引数の指定が不正
@@ -138,7 +138,7 @@ class FileValidator
 	/**
 	 * 現在のエラーまたは指定された種別のエラーがあるかどうかを返します。
 	 *
-	 * @param string エラー種別 (例外のクラス名に対応) uploader | notFound | filesize | filename | filesize | extension | imageType | imageWidth | imageHeight
+	 * @param string $name エラー種別 (例外のクラス名に対応) uploader | notFound | filesize | filename | filesize | extension | imageType | imageWidth | imageHeight
 	 * @return boolean
 	 */
 	public function hasError($name = null)
@@ -152,7 +152,7 @@ class FileValidator
 	/**
 	 * 現在のエラーをクリアします。
 	 *
-	 * @return this
+	 * @return $this
 	 */
 	public function clearErrors()
 	{
@@ -163,7 +163,7 @@ class FileValidator
 	/**
 	 * アップロードエラー定数を検証します。
 	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
+	 * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
 	 * @return boolean 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
@@ -217,23 +217,23 @@ class FileValidator
 		return false;
 	}
 
-	/**
-	 * ファイル名が指定されたエンコーディングで有効かどうかを検証します。
-	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @retun boolean 検証結果
-	 *
-	 * @throws \Volcanus\FileUploader\Exception\FilenameException ファイル名が不正な場合
-	 */
+    /**
+     * ファイル名が指定されたエンコーディングで有効かどうかを検証します。
+     *
+     * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+     * @return boolean|null 検証結果
+     *
+     * @throws \Volcanus\FileUploader\Exception\FilenameException ファイル名が不正な場合
+     */
 	public function validateFilename(FileInterface $file)
 	{
 		$encoding = $this->config('filenameEncoding');
 		if ($encoding === null) {
-			return;
+			return null;
 		}
 		$filename = $file->getClientFilename();
 		if ($filename === null || strlen($filename) === 0) {
-			return;
+			return null;
 		}
 		if (mb_check_encoding($filename, $encoding)) {
 			return true;
@@ -251,8 +251,8 @@ class FileValidator
 	 * ファイルサイズが指定サイズ以内かどうかを検証します。
 	 * 整数値の範囲制限により、4GBを越える場合は検証できません。
 	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @retun boolean 検証結果
+	 * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+	 * @return boolean|null 検証結果
 	 *
 	 * @throws \InvalidArgumentException ファイル最大値の指定が解析不能、またはファイルサイズの取得に失敗した場合
 	 * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが上限値を超えている場合
@@ -261,7 +261,7 @@ class FileValidator
 	{
 		$maxFilesize = $this->config('maxFilesize');
 		if ($maxFilesize === null) {
-			return;
+			return null;
 		}
 		$maxBytes = (is_string($maxFilesize))
 			? $this->convertToBytes($maxFilesize)
@@ -273,7 +273,7 @@ class FileValidator
 		}
 		$filesize = $file->getSize();
 		if ($filesize === null || $filesize === 0) {
-			return;
+			return null;
 		}
 		if ($filesize < 0) {
 			$filesize = sprintf('%u', $filesize);
@@ -301,8 +301,8 @@ class FileValidator
 	/**
 	 * 拡張子が指定したファイル種別に含まれているかどうかを検証します。
 	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @retun boolean 検証結果
+	 * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+	 * @return boolean|null 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ExtensionException 拡張子が許可する拡張子に一致しない場合
 	 */
@@ -310,11 +310,11 @@ class FileValidator
 	{
 		$allowableType = $this->config('allowableType');
 		if ($allowableType === null) {
-			return;
+			return null;
 		}
 		$extension = $file->getClientExtension();
 		if ($extension === null || strlen($extension) === 0) {
-			return;
+			return null;
 		}
 		$allowableTypes = explode(',', $allowableType);
 		foreach ($allowableTypes as $type) {
@@ -346,15 +346,15 @@ class FileValidator
 	/**
 	 * 拡張子が指定したファイルの画像種別と一致するかどうかを検証します。
 	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @retun boolean 検証結果
+	 * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+	 * @return boolean|null 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ImageTypeException 拡張子が内容と一致しない場合
 	 */
 	public function validateImageType(FileInterface $file)
 	{
 		if (!$file->isImage()) {
-			return;
+			return null;
 		}
 		$extension = $file->getClientExtension();
 		$mimeType = $file->getMimeType();
@@ -390,8 +390,8 @@ class FileValidator
 	/**
 	 * 画像の横幅または高さが設定した最大値以下かどうかを検証します。
 	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @retun boolean 検証結果
+	 * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+	 * @return boolean|null 検証結果
 	 *
 	 * @throws \Volcanus\FileUploader\Exception\ImageWidthException 画像の横幅が最大値を越えている場合
 	 * @throws \Volcanus\FileUploader\Exception\ImageHeightException 画像の高さが最大値を越えている場合
@@ -400,16 +400,17 @@ class FileValidator
 	public function validateImageSize(FileInterface $file)
 	{
 		if (!$file->isImage()) {
-			return;
+			return null;
 		}
 		$throwExceptionOnValidate = $this->config('throwExceptionOnValidate');
 		$maxWidth = $this->config('maxWidth');
 		$maxHeight = $this->config('maxHeight');
 		if ($maxWidth === null && $maxHeight === null) {
-			return;
+			return null;
 		}
 		$filepath = $file->getPath();
-		if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
 			if (!empty($maxWidth) && $width > $maxWidth) {
 				$this->errors['imageWidth'] = $width;
 				if ($throwExceptionOnValidate) {
@@ -437,8 +438,8 @@ class FileValidator
 	/**
 	 * 指定されたファイルのImageType定数を返します。
 	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @retun mixed 定数値またはFALSE
+	 * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+	 * @return mixed 定数値またはFALSE
 	 */
 	private function getImageType(FileInterface $file)
 	{
@@ -446,6 +447,7 @@ class FileValidator
 		if ($this->config('enableExif')) {
 			return exif_imagetype($filepath);
 		}
+        /** @noinspection PhpUnusedLocalVariableInspection */
 		if (false !== (list($width, $height, $type, $attr) = getimagesize($filepath))) {
 			return $type;
 		}
@@ -456,7 +458,7 @@ class FileValidator
 	 * 単位付きバイト数をバイト数に変換して返します。
 	 * 2GB以上を扱うにはGMP関数またはBCMath関数が有効になっている必要があります。
 	 *
-	 * @param string バイト数または単位付きバイト数(K,M,G,T,P,E,Z,Y)
+	 * @param string $data バイト数または単位付きバイト数(K,M,G,T,P,E,Z,Y)
 	 * @return mixed バイト数またはFALSE
 	 */
 	private function convertToBytes($data)

@@ -47,7 +47,7 @@ class NativeFile implements FileInterface
 	/**
 	 * コンストラクタ
 	 *
-	 * @param array アップロードされたファイルの情報 $_FILES['userfile']
+	 * @param array $file アップロードされたファイルの情報 $_FILES['userfile']
 	 */
 	public function __construct(array $file)
 	{
@@ -168,9 +168,9 @@ class NativeFile implements FileInterface
 	/**
 	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
 	 *
-	 * @param string 移動先ディレクトリ
-	 * @param string 移動先ファイル名
-	 * @param string 移動先ファイルパス
+	 * @param string $directory 移動先ディレクトリ
+	 * @param string $filename 移動先ファイル名
+	 * @return string 移動先ファイルパス
 	 */
 	public function move($directory, $filename)
 	{

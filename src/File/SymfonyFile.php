@@ -19,14 +19,14 @@ class SymfonyFile implements FileInterface
 {
 
 	/**
-	 * @var Symfony\Component\HttpFoundation\File\UploadedFile
+	 * @var \Symfony\Component\HttpFoundation\File\UploadedFile
 	 */
 	private $file;
 
 	/**
 	 * コンストラクタ
 	 *
-	 * @param Symfony\Component\HttpFoundation\File\UploadedFile
+	 * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
 	 */
 	public function __construct(\Symfony\Component\HttpFoundation\File\UploadedFile $file)
 	{
@@ -120,9 +120,9 @@ class SymfonyFile implements FileInterface
 	/**
 	 * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
 	 *
-	 * @param string 移動先ディレクトリ
-	 * @param string 移動先ファイル名
-	 * @param string 移動先ファイルパス
+	 * @param string $directory 移動先ディレクトリ
+	 * @param string $filename 移動先ファイル名
+	 * @return string 移動先ファイルパス
 	 */
 	public function move($directory, $filename)
 	{

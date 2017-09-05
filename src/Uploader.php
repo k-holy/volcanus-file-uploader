@@ -29,18 +29,19 @@ class Uploader
 	/**
 	 * コンストラクタ
 	 *
-	 * @param array | ArrayAccess 設定オプション
+	 * @param array|\ArrayAccess $configurations 設定オプション
 	 */
 	public function __construct($configurations = array())
 	{
 		$this->initialize($configurations);
 	}
 
-	/**
-	 * オブジェクトを初期化します。
-	 *
-	 * @param array | ArrayAccess 設定オプション
-	 */
+    /**
+     * オブジェクトを初期化します。
+     *
+     * @param array|\ArrayAccess $configurations 設定オプション
+     * @return $this
+     */
 	public function initialize($configurations = array())
 	{
 		$this->config = array();
@@ -58,7 +59,7 @@ class Uploader
 	 * 引数1の場合は指定された設定の値を返します。
 	 * 引数2の場合は指定された設置の値をセットして$thisを返します。
 	 *
-	 * @param string 設定名
+	 * @param string $name 設定名
 	 * @return mixed 設定値 または $this
 	 */
 	public function config($name)
@@ -95,18 +96,19 @@ class Uploader
 		throw new \InvalidArgumentException('Invalid argument count.');
 	}
 
-	/**
-	 * バリデータを利用してアップロードファイルを検証します。
-	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
-	 * @param Volcanus\FileUploader\FileValidator アップロードファイルバリデータ
-	 *
-	 * @throws Acme\Uploader\Exception\FilesizeException ファイルサイズが設定値を超えている場合
-	 * @throws Acme\Uploader\Exception\FilenameException 設定されたエンコーディングに存在しない文字がファイル名に含まれている場合
-	 * @throws Acme\Uploader\Exception\ExtensionException ファイルの拡張子が設定された拡張子の許可リストに一致しない場合
-	 * @throws Acme\Uploader\Exception\ImageTypeException 画像ファイルの拡張子がファイルの内容と一致しない場合
-	 * @throws Acme\Uploader\Exception\UploaderException その他何らかの理由でアップロードが受け付けられない場合
-	 */
+    /**
+     * バリデータを利用してアップロードファイルを検証します。
+     *
+     * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+     * @param \Volcanus\FileUploader\FileValidator $validator アップロードファイルバリデータ
+     * @return bool
+     *
+     * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが設定値を超えている場合
+     * @throws \Volcanus\FileUploader\Exception\FilenameException 設定されたエンコーディングに存在しない文字がファイル名に含まれている場合
+     * @throws \Volcanus\FileUploader\Exception\ExtensionException ファイルの拡張子が設定された拡張子の許可リストに一致しない場合
+     * @throws \Volcanus\FileUploader\Exception\ImageTypeException 画像ファイルの拡張子がファイルの内容と一致しない場合
+     * @throws \Volcanus\FileUploader\Exception\UploaderException その他何らかの理由でアップロードが受け付けられない場合
+     */
 	public function validate(FileInterface $file, FileValidator $validator)
 	{
 
@@ -142,10 +144,10 @@ class Uploader
 	/**
 	 * アップロードファイルを移動し、移動先のファイルパスを返します。
 	 *
-	 * @param Volcanus\FileUploader\File\FileInterface アップロードファイル
+	 * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
 	 * @return string 移動先のファイルパス
 	 *
-	 * @throws Acme\Uploader\Exception\UploaderException アップロードファイルの移動に失敗した場合
+	 * @throws \Volcanus\FileUploader\Exception\UploaderException アップロードファイルの移動に失敗した場合
 	 */
 	public function move(FileInterface $file)
 	{
