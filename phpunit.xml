@@ -2,7 +2,7 @@
 <phpunit bootstrap="tests/bootstrap.php">
     <testsuites>
         <testsuite>
-            <directory suffix="Test.php">./tests</directory>
+            <directory suffix="Test.php">./tests/Volcanus/FileUploader/Test</directory>
         </testsuite>
     </testsuites>
     <filter>
