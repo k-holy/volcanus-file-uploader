@@ -1,23 +1,26 @@
 {
-    "name": "volcanus/file-uploader",
-    "homepage": "https://github.com/k-holy/volcanus-file-uploader",
-    "type": "library",
-    "description": "file uploader",
-    "version": "0.6.0",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "k-holy",
-            "email": "k.holy74@gmail.com"
-        }
-    ],
-    "autoload": {
-        "psr-4": { "Volcanus\\FileUploader\\": "src/" }
-    },
-    "require": {
-        "php": ">=5.5.9"
-    },
-    "require-dev": {
-        "symfony/http-foundation": "2.3.*"
+  "name": "volcanus/file-uploader",
+  "homepage": "https://github.com/k-holy/volcanus-file-uploader",
+  "type": "library",
+  "description": "file uploader",
+  "version": "0.6.0",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "k-holy",
+      "email": "k.holy74@gmail.com"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Volcanus\\FileUploader\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=5.5.9"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^5.7.20||^6.0",
+    "symfony/http-foundation": "2.3.*"
+  }
 }
