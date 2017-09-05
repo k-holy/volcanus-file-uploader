@@ -2,15 +2,15 @@
 <phpunit bootstrap="tests/bootstrap.php">
     <testsuites>
         <testsuite>
-            <directory suffix="Test.php">./tests/Volcanus/FileUploader/Test</directory>
+            <directory suffix="Test.php">tests</directory>
         </testsuite>
     </testsuites>
     <filter>
         <whitelist>
-            <directory suffix=".php">./src</directory>
+            <directory suffix=".php">src</directory>
             <exclude>
-                <directory>./tests</directory>
-                <directory>./vendor</directory>
+                <directory>tests</directory>
+                <directory>vendor</directory>
             </exclude>
         </whitelist>
     </filter>
