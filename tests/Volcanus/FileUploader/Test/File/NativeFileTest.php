@@ -15,7 +15,7 @@ use Volcanus\FileUploader\File\NativeFile;
  *
  * @author k.holy74@gmail.com
  */
-class NativeFileTest extends \PHPUnit_Framework_TestCase
+class NativeFileTest extends \PHPUnit\Framework\TestCase
 {
 
 	private $tempDir;
@@ -35,6 +35,7 @@ class NativeFileTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testConstructorRaiseExceptionWhenNoTmpName()
 	{
+        /** @noinspection PhpUnusedLocalVariableInspection */
 		$file = new NativeFile(array());
 	}
 
@@ -43,6 +44,7 @@ class NativeFileTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testConstructorRaiseExceptionWhenTmpNameIsNotFile()
 	{
+        /** @noinspection PhpUnusedLocalVariableInspection */
 		$file = new NativeFile(array(
 			'tmp_name' => '/file/not/found',
 		));

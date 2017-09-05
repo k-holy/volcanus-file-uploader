@@ -15,7 +15,7 @@ use Volcanus\FileUploader\File\SplFile;
  *
  * @author k.holy74@gmail.com
  */
-class SplFileTest extends \PHPUnit_Framework_TestCase
+class SplFileTest extends \PHPUnit\Framework\TestCase
 {
 
 	private $tempDir;
@@ -35,6 +35,7 @@ class SplFileTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testConstructorRaiseExceptionWhenFileNotFound()
 	{
+        /** @noinspection PhpUnusedLocalVariableInspection */
 		$file = new SplFile(
 			 new \SplFileInfo('/file/not/found')
 		);

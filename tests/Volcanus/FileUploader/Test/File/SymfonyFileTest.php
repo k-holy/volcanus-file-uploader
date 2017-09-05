@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *
  * @author k.holy74@gmail.com
  */
-class SymfonyFileTest extends \PHPUnit_Framework_TestCase
+class SymfonyFileTest extends \PHPUnit\Framework\TestCase
 {
 
 	private $tempDir;
@@ -249,6 +249,7 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testMoveRaiseExceptionWhenUploadedFileThrowFileException()
 	{
+        /** @var $uploadedFile \Symfony\Component\HttpFoundation\File\UploadedFile|\PHPUnit_Framework_MockObject_MockObject */
 		$uploadedFile = $this->getMockBuilder('\Symfony\Component\HttpFoundation\File\UploadedFile')
 			->enableOriginalConstructor()
 			->setConstructorArgs(array(tempnam(sys_get_temp_dir(), ''), 'dummy'))
@@ -264,6 +265,7 @@ class SymfonyFileTest extends \PHPUnit_Framework_TestCase
 
 		$file = new SymfonyFile($uploadedFile);
 
+        /** @noinspection PhpUnusedLocalVariableInspection */
 		$moved_path = $file->move($this->tempDir, 'test.jpg');
 	}
 

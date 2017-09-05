@@ -16,7 +16,7 @@ use Volcanus\FileUploader\Exception\FilepathException;
  *
  * @author k.holy74@gmail.com
  */
-class UploaderTest extends \PHPUnit_Framework_TestCase
+class UploaderTest extends \PHPUnit\Framework\TestCase
 {
 
 	/**
@@ -65,9 +65,11 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallClearErrors()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->once())
 			->method('clearErrors');
@@ -79,9 +81,11 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallValidateUploadError()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->once())
 			->method('validateUploadError')
@@ -94,9 +98,11 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallValidateFilenameWhenConfigHasFilenameEncoding()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->at(2))
 			->method('config')
@@ -114,9 +120,11 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallValidateFilesizeWhenConfigHasMaxFilesize()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->at(3))
 			->method('config')
@@ -134,9 +142,11 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallValidateExtensionWhenConfigHasAllowableType()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->at(4))
 			->method('config')
@@ -154,12 +164,14 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallValidateImageTypeWhenFileIsImage()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isImage')
 			->will($this->returnValue(true));
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->once())
 			->method('validateImageType')
@@ -172,12 +184,14 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallValidateImageSizeWhenFileIsImageAndConfigHasMaxWidth()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isImage')
 			->will($this->returnValue(true));
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->at(6))
 			->method('config')
@@ -195,12 +209,14 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testValidateCallValidateImageSizeWhenFileIsImageAndConfigHasMaxHeight()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isImage')
 			->will($this->returnValue(true));
 
-		$validator = $this->getMock('\Volcanus\FileUploader\FileValidator');
+        /** @var $validator \Volcanus\FileUploader\FileValidator|\PHPUnit_Framework_MockObject_MockObject */
+		$validator = $this->createMock('\Volcanus\FileUploader\FileValidator');
 
 		$validator->expects($this->at(7))
 			->method('config')
@@ -218,7 +234,8 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 
 	public function testMove()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isValid')
 			->will($this->returnValue(true));
@@ -246,7 +263,8 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testMoveRaiseExceptionWhenFileIsNotValid()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isValid')
 			->will($this->returnValue(false));
@@ -264,7 +282,8 @@ class UploaderTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testMoveRaiseExceptionWhenAllRetryFailed()
 	{
-		$file = $this->getMock('\Volcanus\FileUploader\File\FileInterface');
+        /** @var $file \Volcanus\FileUploader\File\FileInterface|\PHPUnit_Framework_MockObject_MockObject */
+		$file = $this->createMock('\Volcanus\FileUploader\File\FileInterface');
 		$file->expects($this->once())
 			->method('isValid')
 			->will($this->returnValue(true));
