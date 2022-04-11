@@ -8,6 +8,8 @@
 
 namespace Volcanus\FileUploader\Test\File;
 
+use PHPUnit\Framework\TestCase;
+use Volcanus\FileUploader\Exception\FilepathException;
 use Volcanus\FileUploader\File\SplFile;
 
 /**
@@ -15,26 +17,24 @@ use Volcanus\FileUploader\File\SplFile;
  *
  * @author k.holy74@gmail.com
  */
-class SplFileTest extends \PHPUnit\Framework\TestCase
+class SplFileTest extends TestCase
 {
 
     private $tempDir;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->cleanTemp();
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testConstructorRaiseExceptionWhenFileNotFound()
     {
+        $this->expectException(\InvalidArgumentException::class);
         /** @noinspection PhpUnusedLocalVariableInspection */
         $file = new SplFile(
             new \SplFileInfo('/file/not/found')
@@ -80,7 +80,7 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg'
+            'テスト.jpg'
         );
 
         $this->assertEquals('テスト.jpg', $file->getClientFilename());
@@ -92,7 +92,7 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg'
+            'テスト.jpg'
         );
 
         $this->assertEquals('jpg', $file->getClientExtension());
@@ -104,8 +104,8 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_CANT_WRITE
+            'テスト.jpg',
+            \UPLOAD_ERR_CANT_WRITE
         );
 
         $this->assertEquals(\UPLOAD_ERR_CANT_WRITE, $file->getError());
@@ -117,8 +117,8 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_OK
+            'テスト.jpg',
+            \UPLOAD_ERR_OK
         );
 
         $this->assertTrue($file->isValid());
@@ -131,8 +131,8 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_OK
+            'テスト.jpg',
+            \UPLOAD_ERR_OK
         );
 
         $this->assertTrue($file->isImage());
@@ -145,8 +145,8 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_OK
+            'テスト.jpg',
+            \UPLOAD_ERR_OK
         );
 
         $this->assertFalse($file->isImage());
@@ -160,21 +160,19 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($temp_path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_OK
+            'テスト.jpg',
+            \UPLOAD_ERR_OK
         );
 
         $moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
         $this->assertFileEquals($moved_path, $orig_path);
-        $this->assertFileNotExists($temp_path);
+        $this->assertFileDoesNotExist($temp_path);
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenAlreadyExists()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
@@ -182,25 +180,23 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($temp_path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_OK
+            'テスト.jpg',
+            \UPLOAD_ERR_OK
         );
 
         $file->move($this->tempDir, 'test.jpg');
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenUploadedFileIsError()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
         $file = new SplFile(
             new \SplFileInfo($temp_path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_CANT_WRITE
+            'テスト.jpg',
+            \UPLOAD_ERR_CANT_WRITE
         );
 
         $file->move($this->tempDir, 'test.jpg');
@@ -212,24 +208,22 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg'
+            'テスト.jpg'
         );
 
         $this->assertEquals(file_get_contents($path), $file->getContent());
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testGetContentRaiseExceptionWhenFileIsNotReadable()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
         $file = new SplFile(
             new \SplFileInfo($temp_path),
-            $clientFilename = 'テスト.jpg',
-            $error = \UPLOAD_ERR_OK
+            'テスト.jpg',
+            \UPLOAD_ERR_OK
         );
 
         unlink($temp_path);
@@ -243,13 +237,13 @@ class SplFileTest extends \PHPUnit\Framework\TestCase
 
         $file = new SplFile(
             new \SplFileInfo($path),
-            $clientFilename = 'テスト.jpg'
+            'テスト.jpg'
         );
 
         $this->assertStringStartsWith('data:image/jpeg;base64,', $file->getContentAsDataUri());
     }
 
-    private function copyToTemp($path)
+    private function copyToTemp($path): string
     {
         $temp_path = $this->tempDir . DIRECTORY_SEPARATOR . basename($path);
         copy($path, $temp_path);
