@@ -8,6 +8,10 @@
 
 namespace Volcanus\FileUploader\Test\File;
 
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Volcanus\FileUploader\Exception\FilepathException;
 use Volcanus\FileUploader\File\SymfonyFile;
 
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -17,17 +21,17 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *
  * @author k.holy74@gmail.com
  */
-class SymfonyFileTest extends \PHPUnit\Framework\TestCase
+class SymfonyFileTest extends TestCase
 {
 
     private $tempDir;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->cleanTemp();
     }
@@ -39,7 +43,7 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg'
+                'テスト.jpg'
             )
         );
 
@@ -53,7 +57,7 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg'
+                'テスト.jpg'
             )
         );
 
@@ -67,7 +71,7 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg'
+                'テスト.jpg'
             )
         );
 
@@ -81,7 +85,7 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg'
+                'テスト.jpg'
             )
         );
 
@@ -95,7 +99,7 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg'
+                'テスト.jpg'
             )
         );
 
@@ -109,10 +113,9 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_CANT_WRITE
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_CANT_WRITE
             )
         );
 
@@ -126,11 +129,10 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
@@ -145,11 +147,10 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
@@ -164,11 +165,10 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
@@ -184,25 +184,22 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $temp_path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
         $moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
         $this->assertFileEquals($moved_path, $orig_path);
-        $this->assertFileNotExists($temp_path);
+        $this->assertFileDoesNotExist($temp_path);
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenAlreadyExists()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
@@ -211,46 +208,40 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $temp_path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
         $file->move($this->tempDir, 'test.jpg');
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenUploadedFileIsError()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
         $file = new SymfonyFile(
             new UploadedFile(
                 $temp_path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_CANT_WRITE,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_CANT_WRITE,
+                true
             )
         );
 
         $file->move($this->tempDir, 'test.jpg');
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenUploadedFileThrowFileException()
     {
-        /** @var $uploadedFile \Symfony\Component\HttpFoundation\File\UploadedFile|\PHPUnit_Framework_MockObject_MockObject */
-        $uploadedFile = $this->getMockBuilder('\Symfony\Component\HttpFoundation\File\UploadedFile')
+        $this->expectException(FilepathException::class);
+        /** @var $uploadedFile UploadedFile|MockObject */
+        $uploadedFile = $this->getMockBuilder(UploadedFile::class)
             ->enableOriginalConstructor()
             ->setConstructorArgs([tempnam(sys_get_temp_dir(), ''), 'dummy'])
             ->getMock();
@@ -260,7 +251,7 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $uploadedFile->expects($this->any())
             ->method('move')
             ->will($this->throwException(
-                new \Symfony\Component\HttpFoundation\File\Exception\FileException()
+                new FileException()
             ));
 
         $file = new SymfonyFile($uploadedFile);
@@ -276,33 +267,29 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
         $this->assertEquals(file_get_contents($path), $file->getContent());
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testGetContentRaiseExceptionWhenFileIsNotReadable()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
         $file = new SymfonyFile(
             new UploadedFile(
                 $temp_path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
@@ -318,18 +305,17 @@ class SymfonyFileTest extends \PHPUnit\Framework\TestCase
         $file = new SymfonyFile(
             new UploadedFile(
                 $path,
-                $clientFilename = 'テスト.jpg',
-                $mimeType = null,
-                $size = null,
-                $error = \UPLOAD_ERR_OK,
-                $test = true
+                'テスト.jpg',
+                null,
+                \UPLOAD_ERR_OK,
+                true
             )
         );
 
         $this->assertStringStartsWith('data:image/jpeg;base64,', $file->getContentAsDataUri());
     }
 
-    private function copyToTemp($path)
+    private function copyToTemp($path): string
     {
         $temp_path = $this->tempDir . DIRECTORY_SEPARATOR . basename($path);
         copy($path, $temp_path);

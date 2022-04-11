@@ -8,26 +8,27 @@
 
 namespace Volcanus\FileUploader\Test\File;
 
+use Laminas\Diactoros\UploadedFile;
+use PHPUnit\Framework\TestCase;
+use Volcanus\FileUploader\Exception\FilepathException;
 use Volcanus\FileUploader\File\Psr7UploadedFile;
-
-use Zend\Diactoros\UploadedFile;
 
 /**
  * Test for Volcanus\FileUploader\File\Psr7UploadedFile
  *
  * @author k.holy74@gmail.com
  */
-class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
+class Psr7UploadedFileTest extends TestCase
 {
 
     private $tempDir;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->cleanTemp();
     }
@@ -39,8 +40,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -54,8 +55,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -69,8 +70,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -84,9 +85,9 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK,
-                $clientFilename = 'テスト.jpg'
+                filesize($path),
+                \UPLOAD_ERR_OK,
+                'テスト.jpg'
             )
         );
 
@@ -100,9 +101,9 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK,
-                $clientFilename = 'テスト.jpg'
+                filesize($path),
+                \UPLOAD_ERR_OK,
+                'テスト.jpg'
             )
         );
 
@@ -116,8 +117,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_CANT_WRITE
+                filesize($path),
+                \UPLOAD_ERR_CANT_WRITE
             )
         );
 
@@ -131,8 +132,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -147,8 +148,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -163,8 +164,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -180,8 +181,8 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $temp_path,
-                $size = filesize($temp_path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($temp_path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -192,11 +193,9 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $this->assertFileExists($temp_path);
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenAlreadyExists()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
@@ -205,27 +204,25 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $temp_path,
-                $size = filesize($temp_path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($temp_path),
+                \UPLOAD_ERR_OK
             )
         );
 
         $file->move($this->tempDir, 'test.jpg');
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenUploadedFileIsError()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $temp_path,
-                $size = filesize($temp_path),
-                $errorStatus = \UPLOAD_ERR_CANT_WRITE
+                filesize($temp_path),
+                \UPLOAD_ERR_CANT_WRITE
             )
         );
 
@@ -239,27 +236,25 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
         $this->assertEquals(file_get_contents($path), $file->getContent());
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testGetContentRaiseExceptionWhenFileIsNotReadable()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $temp_path,
-                $size = filesize($temp_path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($temp_path),
+                \UPLOAD_ERR_OK
             )
         );
 
@@ -275,15 +270,15 @@ class Psr7UploadedFileTest extends \PHPUnit\Framework\TestCase
         $file = new Psr7UploadedFile(
             new UploadedFile(
                 $path,
-                $size = filesize($path),
-                $errorStatus = \UPLOAD_ERR_OK
+                filesize($path),
+                \UPLOAD_ERR_OK
             )
         );
 
         $this->assertStringStartsWith('data:image/jpeg;base64,', $file->getContentAsDataUri());
     }
 
-    private function copyToTemp($path)
+    private function copyToTemp($path): string
     {
         $temp_path = $this->tempDir . DIRECTORY_SEPARATOR . basename($path);
         copy($path, $temp_path);

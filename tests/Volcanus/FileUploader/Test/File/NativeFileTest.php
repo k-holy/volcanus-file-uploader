@@ -8,6 +8,8 @@
 
 namespace Volcanus\FileUploader\Test\File;
 
+use PHPUnit\Framework\TestCase;
+use Volcanus\FileUploader\Exception\FilepathException;
 use Volcanus\FileUploader\File\NativeFile;
 
 /**
@@ -15,35 +17,31 @@ use Volcanus\FileUploader\File\NativeFile;
  *
  * @author k.holy74@gmail.com
  */
-class NativeFileTest extends \PHPUnit\Framework\TestCase
+class NativeFileTest extends TestCase
 {
 
     private $tempDir;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->cleanTemp();
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testConstructorRaiseExceptionWhenNoTmpName()
     {
+        $this->expectException(\InvalidArgumentException::class);
         /** @noinspection PhpUnusedLocalVariableInspection */
         $file = new NativeFile([]);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testConstructorRaiseExceptionWhenTmpNameIsNotFile()
     {
+        $this->expectException(\InvalidArgumentException::class);
         /** @noinspection PhpUnusedLocalVariableInspection */
         $file = new NativeFile([
             'tmp_name' => '/file/not/found',
@@ -176,14 +174,12 @@ class NativeFileTest extends \PHPUnit\Framework\TestCase
         $moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
         $this->assertFileEquals($moved_path, $orig_path);
-        $this->assertFileNotExists($temp_path);
+        $this->assertFileDoesNotExist($temp_path);
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenAlreadyExists()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
@@ -198,11 +194,9 @@ class NativeFileTest extends \PHPUnit\Framework\TestCase
         $file->move($this->tempDir, 'test.jpg');
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testMoveRaiseExceptionWhenUploadedFileIsError()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
@@ -227,11 +221,9 @@ class NativeFileTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(file_get_contents($path), $file->getContent());
     }
 
-    /**
-     * @expectedException \Volcanus\FileUploader\Exception\FilepathException
-     */
     public function testGetContentRaiseExceptionWhenFileIsNotReadable()
     {
+        $this->expectException(FilepathException::class);
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
         $temp_path = $this->copyToTemp($orig_path);
 
@@ -258,7 +250,7 @@ class NativeFileTest extends \PHPUnit\Framework\TestCase
         $this->assertStringStartsWith('data:image/jpeg;base64,', $file->getContentAsDataUri());
     }
 
-    private function copyToTemp($path)
+    private function copyToTemp($path): string
     {
         $temp_path = $this->tempDir . DIRECTORY_SEPARATOR . basename($path);
         copy($path, $temp_path);
