@@ -29,7 +29,7 @@ class NativeFile implements FileInterface
     private $clientFilename;
 
     /**
-     * @var int アップロードされたファイルのサイズ
+     * @var int|null アップロードされたファイルのサイズ
      */
     private $size;
 
@@ -77,9 +77,9 @@ class NativeFile implements FileInterface
     /**
      * アップロードファイルのパスを返します。
      *
-     * @return string ファイルパス
+     * @return string|null ファイルパス
      */
-    public function getPath()
+    public function getPath(): ?string
     {
         return $this->path;
     }
@@ -87,12 +87,15 @@ class NativeFile implements FileInterface
     /**
      * アップロードファイルのサイズを返します。
      *
-     * @return int ファイルサイズ
+     * @return int|null ファイルサイズ
      */
-    public function getSize()
+    public function getSize(): ?int
     {
         if ($this->size === null && $this->isValid()) {
-            $this->size = filesize($this->path);
+            $size = filesize($this->path);
+            if ($size !== false) {
+                $this->size = $size;
+            }
         }
         return $this->size;
     }
@@ -100,13 +103,16 @@ class NativeFile implements FileInterface
     /**
      * アップロードファイルのMIMEタイプを返します。
      *
-     * @return string MIMEタイプ
+     * @return string|null MIMEタイプ
      */
-    public function getMimeType()
+    public function getMimeType(): ?string
     {
         if ($this->mimeType === null && $this->isValid()) {
             $getMimeType = new \finfo(\FILEINFO_MIME_TYPE);
-            $this->mimeType = $getMimeType->file($this->path);
+            $mimeType = $getMimeType->file($this->path);
+            if ($mimeType !== false) {
+                $this->mimeType = $mimeType;
+            }
         }
         return $this->mimeType;
     }
@@ -114,9 +120,9 @@ class NativeFile implements FileInterface
     /**
      * アップロードファイルのクライアントファイル名を返します。
      *
-     * @return string クライアントファイル名
+     * @return string|null クライアントファイル名
      */
-    public function getClientFilename()
+    public function getClientFilename(): ?string
     {
         return $this->clientFilename;
     }
@@ -124,19 +130,22 @@ class NativeFile implements FileInterface
     /**
      * アップロードファイルのクライアントファイル拡張子を返します。
      *
-     * @return string クライアントファイル拡張子
+     * @return string|null クライアントファイル拡張子
      */
-    public function getClientExtension()
+    public function getClientExtension(): ?string
     {
-        return pathinfo($this->clientFilename, \PATHINFO_EXTENSION);
+        if ($this->clientFilename !== null) {
+            return pathinfo($this->clientFilename, \PATHINFO_EXTENSION);
+        }
+        return null;
     }
 
     /**
      * アップロードエラーコードを返します。
      *
-     * @return int アップロードエラーコード
+     * @return int|null アップロードエラー
      */
-    public function getError()
+    public function getError(): ?int
     {
         return $this->error;
     }
@@ -144,9 +153,9 @@ class NativeFile implements FileInterface
     /**
      * アップロードファイルが妥当かどうかを返します。
      *
-     * @return boolean アップロードファイルが妥当かどうか
+     * @return bool アップロードファイルが妥当かどうか
      */
-    public function isValid()
+    public function isValid(): bool
     {
         return ($this->error === \UPLOAD_ERR_OK && is_file($this->path));
     }
@@ -154,9 +163,9 @@ class NativeFile implements FileInterface
     /**
      * アップロードファイルが画像かどうかを返します。
      *
-     * @return boolean アップロードファイルが画像かどうか
+     * @return bool アップロードファイルが画像かどうか
      */
-    public function isImage()
+    public function isImage(): bool
     {
         if (is_file($this->path)) {
             $imagesize = @getimagesize($this->path);
@@ -172,7 +181,7 @@ class NativeFile implements FileInterface
      * @param string $filename 移動先ファイル名
      * @return string 移動先ファイルパス
      */
-    public function move($directory, $filename)
+    public function move(string $directory, string $filename): string
     {
         $destination = rtrim($directory, '/\\') . \DIRECTORY_SEPARATOR . $filename;
         $source = $this->path;
@@ -197,14 +206,20 @@ class NativeFile implements FileInterface
      *
      * @return string ファイルの内容
      */
-    public function getContent()
+    public function getContent(): string
     {
         if (!is_file($this->path) || !is_readable($this->path)) {
             throw new FilepathException(
                 sprintf('The file "%s" could not read', $this->path)
             );
         }
-        return file_get_contents($this->path);
+        $content = file_get_contents($this->path);
+        if ($content !== false) {
+            return $content;
+        }
+        throw new FilepathException(
+            sprintf('The file "%s" could not get contents', $this->path)
+        );
     }
 
     /**
@@ -212,7 +227,7 @@ class NativeFile implements FileInterface
      *
      * @return string DataURI
      */
-    public function getContentAsDataUri()
+    public function getContentAsDataUri(): string
     {
         return sprintf('data:%s;base64,%s',
             $this->getMimeType(),

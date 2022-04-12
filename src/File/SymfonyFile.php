@@ -8,6 +8,8 @@
 
 namespace Volcanus\FileUploader\File;
 
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\File\Exception\FileException as SymfonyFileException;
 use Volcanus\FileUploader\Exception\FilepathException;
 
 /**
@@ -19,16 +21,16 @@ class SymfonyFile implements FileInterface
 {
 
     /**
-     * @var \Symfony\Component\HttpFoundation\File\UploadedFile
+     * @var UploadedFile
      */
     private $file;
 
     /**
      * コンストラクタ
      *
-     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
+     * @param UploadedFile $file
      */
-    public function __construct(\Symfony\Component\HttpFoundation\File\UploadedFile $file)
+    public function __construct(UploadedFile $file)
     {
         $this->file = $file;
     }
@@ -36,9 +38,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードファイルのパスを返します。
      *
-     * @return string ファイルパス
+     * @return string|null ファイルパス
      */
-    public function getPath()
+    public function getPath(): ?string
     {
         return $this->file->getPathname();
     }
@@ -46,9 +48,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードファイルのサイズを返します。
      *
-     * @return int ファイルサイズ
+     * @return int|null ファイルサイズ
      */
-    public function getSize()
+    public function getSize(): ?int
     {
         return $this->file->getSize();
     }
@@ -56,9 +58,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードファイルのMIMEタイプを返します。
      *
-     * @return string MIMEタイプ
+     * @return string|null MIMEタイプ
      */
-    public function getMimeType()
+    public function getMimeType(): ?string
     {
         return $this->file->getMimeType();
     }
@@ -66,9 +68,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードファイルのクライアントファイル名を返します。
      *
-     * @return string クライアントファイル名
+     * @return string|null クライアントファイル拡張子
      */
-    public function getClientFilename()
+    public function getClientFilename(): ?string
     {
         return $this->file->getClientOriginalName();
     }
@@ -76,9 +78,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードファイルのクライアントファイル拡張子を返します。
      *
-     * @return string クライアントファイル拡張子
+     * @return string|null クライアントファイル拡張子
      */
-    public function getClientExtension()
+    public function getClientExtension(): ?string
     {
         return $this->file->getClientOriginalExtension();
     }
@@ -86,9 +88,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードエラーを返します。
      *
-     * @return int アップロードエラー
+     * @return int|null アップロードエラー
      */
-    public function getError()
+    public function getError(): ?int
     {
         return $this->file->getError();
     }
@@ -96,9 +98,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードファイルが妥当かどうかを返します。
      *
-     * @return boolean アップロードファイルが妥当かどうか
+     * @return bool アップロードファイルが妥当かどうか
      */
-    public function isValid()
+    public function isValid(): bool
     {
         return $this->file->isValid();
     }
@@ -106,9 +108,9 @@ class SymfonyFile implements FileInterface
     /**
      * アップロードファイルが画像かどうかを返します。
      *
-     * @return boolean アップロードファイルが画像かどうか
+     * @return bool アップロードファイルが画像かどうか
      */
-    public function isImage()
+    public function isImage(): bool
     {
         if ($this->file->isFile()) {
             $imagesize = @getimagesize($this->file->getPathname());
@@ -124,7 +126,7 @@ class SymfonyFile implements FileInterface
      * @param string $filename 移動先ファイル名
      * @return string 移動先ファイルパス
      */
-    public function move($directory, $filename)
+    public function move(string $directory, string $filename): string
     {
         $source = $this->file->getPathname();
         $destination = rtrim($directory, '/\\') . \DIRECTORY_SEPARATOR . $filename;
@@ -132,7 +134,7 @@ class SymfonyFile implements FileInterface
             try {
                 $file = $this->file->move($directory, $filename);
                 return $file->getPathname();
-            } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $e) {
+            } catch (SymfonyFileException $e) {
                 throw new FilepathException(
                     sprintf('The file could not move "%s" -> "%s"', $source, $destination), 0, $e
                 );
@@ -148,14 +150,20 @@ class SymfonyFile implements FileInterface
      *
      * @return string ファイルの内容
      */
-    public function getContent()
+    public function getContent(): string
     {
         if (!$this->file->isFile() || !$this->file->isReadable()) {
             throw new FilepathException(
                 sprintf('The file "%s" could not read', $this->file->getPathname())
             );
         }
-        return file_get_contents($this->file->getPathname());
+        $content = file_get_contents($this->file->getPathname());
+        if ($content !== false) {
+            return $content;
+        }
+        throw new FilepathException(
+            sprintf('The file "%s" could not get contents', $this->file->getPathname())
+        );
     }
 
     /**
@@ -163,7 +171,7 @@ class SymfonyFile implements FileInterface
      *
      * @return string DataURI
      */
-    public function getContentAsDataUri()
+    public function getContentAsDataUri(): string
     {
         return sprintf('data:%s;base64,%s',
             $this->getMimeType(),

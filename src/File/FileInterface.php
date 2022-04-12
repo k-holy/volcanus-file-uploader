@@ -19,58 +19,58 @@ interface FileInterface
     /**
      * アップロードファイルのパスを返します。
      *
-     * @return string ファイルパス
+     * @return string|null ファイルパス
      */
-    public function getPath();
+    public function getPath(): ?string;
 
     /**
      * アップロードファイルのサイズを返します。
      *
-     * @return int ファイルサイズ
+     * @return int|null ファイルサイズ
      */
-    public function getSize();
+    public function getSize(): ?int;
 
     /**
      * アップロードファイルのMIMEタイプを返します。
      *
-     * @return string MIMEタイプ
+     * @return string|null MIMEタイプ
      */
-    public function getMimeType();
+    public function getMimeType(): ?string;
 
     /**
      * アップロードファイルのクライアントファイル名を返します。
      *
-     * @return string クライアントファイル名
+     * @return string|null クライアントファイル名
      */
-    public function getClientFilename();
+    public function getClientFilename(): ?string;
 
     /**
      * アップロードファイルのクライアントファイル拡張子を返します。
      *
-     * @return string クライアントファイル拡張子
+     * @return string|null クライアントファイル拡張子
      */
-    public function getClientExtension();
+    public function getClientExtension(): ?string;
 
     /**
      * アップロードエラーを返します。
      *
-     * @return int アップロードエラー
+     * @return int|null アップロードエラー
      */
-    public function getError();
+    public function getError(): ?int;
 
     /**
      * アップロードファイルが妥当かどうかを返します。
      *
-     * @return boolean アップロードファイルが妥当かどうか
+     * @return bool アップロードファイルが妥当かどうか
      */
-    public function isValid();
+    public function isValid(): bool;
 
     /**
      * アップロードファイルが画像かどうかを返します。
      *
-     * @return boolean アップロードファイルが画像かどうか
+     * @return bool アップロードファイルが画像かどうか
      */
-    public function isImage();
+    public function isImage(): bool;
 
     /**
      * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
@@ -79,20 +79,20 @@ interface FileInterface
      * @param string $filename 移動先ファイル名
      * @return string 移動先ファイルパス
      */
-    public function move($directory, $filename);
+    public function move(string $directory, string $filename): string;
 
     /**
      * アップロードファイルの内容を返します。
      *
      * @return string ファイルの内容
      */
-    public function getContent();
+    public function getContent(): string;
 
     /**
      * アップロードファイルの内容をDataURI形式で返します。
      *
      * @return string DataURI
      */
-    public function getContentAsDataUri();
+    public function getContentAsDataUri(): string;
 
 }

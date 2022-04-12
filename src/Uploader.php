@@ -8,7 +8,10 @@
 
 namespace Volcanus\FileUploader;
 
-use Volcanus\FileUploader\FileValidator;
+use Volcanus\FileUploader\Exception\ExtensionException;
+use Volcanus\FileUploader\Exception\FilenameException;
+use Volcanus\FileUploader\Exception\FilesizeException;
+use Volcanus\FileUploader\Exception\ImageTypeException;
 use Volcanus\FileUploader\File\FileInterface;
 use Volcanus\FileUploader\Exception\FilepathException;
 use Volcanus\FileUploader\Exception\UploaderException;
@@ -40,9 +43,9 @@ class Uploader
      * オブジェクトを初期化します。
      *
      * @param array|\ArrayAccess $configurations 設定オプション
-     * @return $this
+     * @return self
      */
-    public function initialize($configurations = [])
+    public function initialize($configurations = []): self
     {
         $this->config = [];
         $this->config['moveDirectory'] = null;
@@ -62,7 +65,7 @@ class Uploader
      * @param string $name 設定名
      * @return mixed 設定値 または $this
      */
-    public function config($name)
+    public function config(string $name)
     {
         switch (func_num_args()) {
             case 1:
@@ -99,17 +102,17 @@ class Uploader
     /**
      * バリデータを利用してアップロードファイルを検証します。
      *
-     * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
-     * @param \Volcanus\FileUploader\FileValidator $validator アップロードファイルバリデータ
+     * @param FileInterface $file アップロードファイル
+     * @param FileValidator $validator アップロードファイルバリデータ
      * @return bool
      *
-     * @throws \Volcanus\FileUploader\Exception\FilesizeException ファイルサイズが設定値を超えている場合
-     * @throws \Volcanus\FileUploader\Exception\FilenameException 設定されたエンコーディングに存在しない文字がファイル名に含まれている場合
-     * @throws \Volcanus\FileUploader\Exception\ExtensionException ファイルの拡張子が設定された拡張子の許可リストに一致しない場合
-     * @throws \Volcanus\FileUploader\Exception\ImageTypeException 画像ファイルの拡張子がファイルの内容と一致しない場合
-     * @throws \Volcanus\FileUploader\Exception\UploaderException その他何らかの理由でアップロードが受け付けられない場合
+     * @throws FilesizeException ファイルサイズが設定値を超えている場合
+     * @throws FilenameException 設定されたエンコーディングに存在しない文字がファイル名に含まれている場合
+     * @throws ExtensionException ファイルの拡張子が設定された拡張子の許可リストに一致しない場合
+     * @throws ImageTypeException 画像ファイルの拡張子がファイルの内容と一致しない場合
+     * @throws UploaderException その他何らかの理由でアップロードが受け付けられない場合
      */
-    public function validate(FileInterface $file, FileValidator $validator)
+    public function validate(FileInterface $file, FileValidator $validator): bool
     {
 
         $validator->clearErrors();
@@ -138,18 +141,18 @@ class Uploader
 
         }
 
-        return $validator->hasError() ? false : true;
+        return !$validator->hasError();
     }
 
     /**
      * アップロードファイルを移動し、移動先のファイルパスを返します。
      *
-     * @param \Volcanus\FileUploader\File\FileInterface $file アップロードファイル
+     * @param FileInterface $file アップロードファイル
      * @return string 移動先のファイルパス
      *
-     * @throws \Volcanus\FileUploader\Exception\UploaderException アップロードファイルの移動に失敗した場合
+     * @throws UploaderException アップロードファイルの移動に失敗した場合
      */
-    public function move(FileInterface $file)
+    public function move(FileInterface $file): string
     {
         $moveDirectory = $this->config('moveDirectory');
         $moveRetry = $this->config('moveRetry');
