@@ -75,7 +75,7 @@ class Uploader
                 if (isset($value)) {
                     switch ($name) {
                         case 'moveRetry':
-                            if (!is_int($value) && !ctype_digit($value)) {
+                            if (!is_int($value) && (!is_string($value) || !ctype_digit($value))) {
                                 throw new \InvalidArgumentException(
                                     sprintf('The config parameter "%s" accepts numeric.', $name));
                             }

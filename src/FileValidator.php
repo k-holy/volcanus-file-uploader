@@ -95,7 +95,7 @@ class FileValidator
                         case 'enableBcmath':
                         case 'enableExif':
                         case 'throwExceptionOnValidate':
-                            if (!is_bool($value) && !is_int($value) && !ctype_digit($value)) {
+                            if (!is_bool($value) && !is_int($value) && (!is_string($value) || !ctype_digit($value))) {
                                 throw new \InvalidArgumentException(
                                     sprintf('The config parameter "%s" accepts boolean or numeric.', $name));
                             }
@@ -110,7 +110,7 @@ class FileValidator
                             break;
                         case 'maxWidth':
                         case 'maxHeight':
-                            if (!is_int($value) && !ctype_digit($value)) {
+                            if (!is_int($value) && (!is_string($value) || !ctype_digit($value))) {
                                 throw new \InvalidArgumentException(
                                     sprintf('The config parameter "%s" accepts numeric.', $name));
                             }
