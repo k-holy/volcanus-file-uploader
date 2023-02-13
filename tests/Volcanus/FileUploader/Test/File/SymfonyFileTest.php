@@ -1,6 +1,6 @@
 <?php
 /**
- * Volcanus libraries for PHP
+ * Volcanus libraries for PHP 8.1~
  *
  * @copyright k-holy <k.holy74@gmail.com>
  * @license The MIT License (MIT)
@@ -24,7 +24,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class SymfonyFileTest extends TestCase
 {
 
-    private $tempDir;
+    private string $tempDir;
 
     public function setUp(): void
     {

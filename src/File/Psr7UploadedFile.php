@@ -1,6 +1,6 @@
 <?php
 /**
- * Volcanus libraries for PHP
+ * Volcanus libraries for PHP 8.1~
  *
  * @copyright k-holy <k.holy74@gmail.com>
  * @license The MIT License (MIT)
@@ -23,22 +23,22 @@ class Psr7UploadedFile implements FileInterface
     /**
      * @var UploadedFileInterface
      */
-    private $file;
+    private UploadedFileInterface $file;
 
     /**
-     * @var StreamInterface
+     * @var StreamInterface|null
      */
-    private $stream;
+    private ?StreamInterface $stream;
 
     /**
-     * @var string
+     * @var string|null
      */
-    private $buffer;
+    private ?string $buffer;
 
     /**
-     * @var string アップロードされたファイルのMIMEタイプ
+     * @var string|null アップロードされたファイルのMIMEタイプ
      */
-    private $mimeType;
+    private ?string $mimeType;
 
     /**
      * コンストラクタ
@@ -208,7 +208,7 @@ class Psr7UploadedFile implements FileInterface
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     private function getBuffer(): ?string
     {

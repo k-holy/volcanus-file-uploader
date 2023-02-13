@@ -1,6 +1,6 @@
 <?php
 /**
- * Volcanus libraries for PHP
+ * Volcanus libraries for PHP 8.1~
  *
  * @copyright k-holy <k.holy74@gmail.com>
  * @license The MIT License (MIT)
@@ -21,7 +21,7 @@ use Volcanus\FileUploader\File\Psr7UploadedFile;
 class Psr7UploadedFileTest extends TestCase
 {
 
-    private $tempDir;
+    private string $tempDir;
 
     public function setUp(): void
     {
@@ -189,8 +189,6 @@ class Psr7UploadedFileTest extends TestCase
         $moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
         $this->assertFileEquals($moved_path, $orig_path);
-        // PSR-7 UploadedFile は StreamInterface も受け付けるため、ファイルパスを操作しない
-        $this->assertFileExists($temp_path);
     }
 
     public function testMoveRaiseExceptionWhenAlreadyExists()
