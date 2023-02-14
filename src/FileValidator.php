@@ -279,12 +279,10 @@ class FileValidator
             $filesize = sprintf('%u', $filesize);
         }
         if ($this->config('enableGmp')) {
-            /** @noinspection PhpComposerExtensionStubsInspection */
             if (0 <= gmp_cmp(gmp_init($maxBytes, 10), gmp_init($filesize, 10))) {
                 return true;
             }
         } elseif ($this->config('enableBcmath')) {
-            /** @noinspection PhpComposerExtensionStubsInspection */
             if (0 <= bccomp($maxBytes, $filesize)) {
                 return true;
             }
@@ -471,10 +469,8 @@ class FileValidator
         if (isset($matches[2])) {
             $index = array_search(sprintf('%sB', $matches[2]), ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']);
             if ($this->config('enableGmp')) {
-                /** @noinspection PhpComposerExtensionStubsInspection */
                 return gmp_strval(gmp_mul(gmp_init($matches[1], 10), gmp_pow(gmp_init(1024, 10), (int)$index)), 10);
             } elseif ($this->config('enableBcmath')) {
-                /** @noinspection PhpComposerExtensionStubsInspection */
                 return bcmul($matches[1], bcpow(1024, (int)$index));
             } else {
                 return $matches[1] * pow(1024, (int)$index);
