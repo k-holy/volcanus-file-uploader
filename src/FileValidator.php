@@ -1,6 +1,6 @@
 <?php
 /**
- * Volcanus libraries for PHP
+ * Volcanus libraries for PHP 8.1~
  *
  * @copyright k-holy <k.holy74@gmail.com>
  * @license The MIT License (MIT)
@@ -29,19 +29,19 @@ class FileValidator
     /**
      * @var array 設定オプション
      */
-    private $config;
+    private array $config;
 
     /**
      * @var array エラー
      */
-    private $errors;
+    private array $errors;
 
     /**
      * コンストラクタ
      *
      * @param array|\ArrayAccess $configurations 設定オプション
      */
-    public function __construct($configurations = [])
+    public function __construct(array|\ArrayAccess $configurations = [])
     {
         $this->initialize($configurations);
     }
@@ -50,9 +50,9 @@ class FileValidator
      * オブジェクトを初期化します。
      *
      * @param array|\ArrayAccess $configurations 設定オプション
-     * @return self
+     * @return static
      */
-    public function initialize($configurations = []): self
+    public function initialize(array|\ArrayAccess $configurations = []): static
     {
         $this->config = [];
         $this->config['enableGmp'] = extension_loaded('gmp');
@@ -82,7 +82,7 @@ class FileValidator
      *
      * @throws \InvalidArgumentException 引数の指定が不正
      */
-    public function config(string $name)
+    public function config(string $name): mixed
     {
         switch (func_num_args()) {
             case 1:
@@ -279,12 +279,10 @@ class FileValidator
             $filesize = sprintf('%u', $filesize);
         }
         if ($this->config('enableGmp')) {
-            /** @noinspection PhpComposerExtensionStubsInspection */
             if (0 <= gmp_cmp(gmp_init($maxBytes, 10), gmp_init($filesize, 10))) {
                 return true;
             }
         } elseif ($this->config('enableBcmath')) {
-            /** @noinspection PhpComposerExtensionStubsInspection */
             if (0 <= bccomp($maxBytes, $filesize)) {
                 return true;
             }
@@ -412,7 +410,7 @@ class FileValidator
         }
         $filepath = $file->getPath();
         /** @noinspection PhpUnusedLocalVariableInspection */
-        if (false != (list($width, $height, $type, $attr) = getimagesize($filepath))) {
+        if ((list($width, $height, $type, $attr) = getimagesize($filepath))) {
             if (!empty($maxWidth) && $width > $maxWidth) {
                 $this->errors['imageWidth'] = $width;
                 if ($throwExceptionOnValidate) {
@@ -442,15 +440,14 @@ class FileValidator
      * @param FileInterface $file アップロードファイル
      * @return mixed 定数値またはFALSE
      */
-    private function getImageType(FileInterface $file)
+    private function getImageType(FileInterface $file): mixed
     {
         $filepath = $file->getPath();
         if ($this->config('enableExif')) {
-            /** @noinspection PhpComposerExtensionStubsInspection */
             return exif_imagetype($filepath);
         }
         /** @noinspection PhpUnusedLocalVariableInspection */
-        if (false != (list($width, $height, $type, $attr) = getimagesize($filepath))) {
+        if ((list($width, $height, $type, $attr) = getimagesize($filepath))) {
             return $type;
         }
         return false;
@@ -463,7 +460,7 @@ class FileValidator
      * @param string $data バイト数または単位付きバイト数(K,M,G,T,P,E,Z,Y)
      * @return mixed バイト数またはFALSE
      */
-    private function convertToBytes(string $data)
+    private function convertToBytes(string $data): mixed
     {
         preg_match('/\A(\d+)(K|M|G|T|P|E|Z|Y?)\z/i', $data, $matches);
         if (!isset($matches[1])) {
@@ -472,10 +469,8 @@ class FileValidator
         if (isset($matches[2])) {
             $index = array_search(sprintf('%sB', $matches[2]), ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']);
             if ($this->config('enableGmp')) {
-                /** @noinspection PhpComposerExtensionStubsInspection */
                 return gmp_strval(gmp_mul(gmp_init($matches[1], 10), gmp_pow(gmp_init(1024, 10), (int)$index)), 10);
             } elseif ($this->config('enableBcmath')) {
-                /** @noinspection PhpComposerExtensionStubsInspection */
                 return bcmul($matches[1], bcpow(1024, (int)$index));
             } else {
                 return $matches[1] * pow(1024, (int)$index);

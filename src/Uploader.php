@@ -1,6 +1,6 @@
 <?php
 /**
- * Volcanus libraries for PHP
+ * Volcanus libraries for PHP 8.1~
  *
  * @copyright k-holy <k.holy74@gmail.com>
  * @license The MIT License (MIT)
@@ -27,14 +27,14 @@ class Uploader
     /**
      * @var array 設定オプション
      */
-    private $config;
+    private array $config;
 
     /**
      * コンストラクタ
      *
      * @param array|\ArrayAccess $configurations 設定オプション
      */
-    public function __construct($configurations = [])
+    public function __construct(array|\ArrayAccess $configurations = [])
     {
         $this->initialize($configurations);
     }
@@ -45,7 +45,7 @@ class Uploader
      * @param array|\ArrayAccess $configurations 設定オプション
      * @return self
      */
-    public function initialize($configurations = []): self
+    public function initialize(array|\ArrayAccess $configurations = []): self
     {
         $this->config = [];
         $this->config['moveDirectory'] = null;
@@ -65,7 +65,7 @@ class Uploader
      * @param string $name 設定名
      * @return mixed 設定値 または $this
      */
-    public function config(string $name)
+    public function config(string $name): mixed
     {
         switch (func_num_args()) {
             case 1:
@@ -166,7 +166,7 @@ class Uploader
                 }
                 try {
                     return $file->move($moveDirectory, $filename);
-                } catch (FilepathException $e) {
+                } catch (FilepathException) {
                 }
                 $moveRetry--;
             }
@@ -176,7 +176,11 @@ class Uploader
         );
     }
 
-    private function prepareMove($directory)
+    /**
+     * @param string $directory
+     * @return void
+     */
+    private function prepareMove(string $directory): void
     {
         if (!is_dir($directory) && false === @mkdir($directory, 0777, true)) {
             throw new UploaderException(

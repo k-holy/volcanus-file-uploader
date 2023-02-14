@@ -1,6 +1,6 @@
 <?php
 /**
- * Volcanus libraries for PHP
+ * Volcanus libraries for PHP 8.1~
  *
  * @copyright k-holy <k.holy74@gmail.com>
  * @license The MIT License (MIT)
@@ -19,30 +19,30 @@ class NativeFile implements FileInterface
 {
 
     /**
-     * @var string アップロードされたファイルのパス
+     * @var string|null アップロードされたファイルのパス
      */
-    private $path;
+    private ?string $path;
 
     /**
-     * @var string アップロード元のファイル名
+     * @var string|null アップロード元のファイル名
      */
-    private $clientFilename;
+    private ?string $clientFilename;
 
     /**
      * @var int|null アップロードされたファイルのサイズ
      */
-    private $size;
+    private ?int $size;
 
     /**
-     * @var string アップロードされたファイルのMIMEタイプ
+     * @var string|null アップロードされたファイルのMIMEタイプ
      */
-    private $mimeType;
+    private ?string $mimeType;
 
     /**
-     * @var int アップロードエラーコード
+     * @var int|null アップロードエラーコード
      * @see http://jp.php.net/manual/ja/features.file-upload.errors.php
      */
-    private $error;
+    private ?int $error;
 
     /**
      * コンストラクタ
