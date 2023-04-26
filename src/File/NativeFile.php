@@ -179,7 +179,7 @@ class NativeFile implements FileInterface
     public function getImageInfo(): mixed
     {
         if (is_file($this->path)) {
-            return @getimagesize($this->path);
+            return getimagesize($this->path);
         }
         return false;
     }

@@ -149,7 +149,7 @@ class Psr7UploadedFile implements FileInterface
     public function getImageInfo(): mixed
     {
         if ($this->isValid()) {
-            return @getimagesizefromstring($this->getBuffer());
+            return getimagesizefromstring($this->getBuffer());
         }
         return false;
     }
