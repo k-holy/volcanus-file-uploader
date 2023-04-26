@@ -167,7 +167,7 @@ class SplFile implements FileInterface
     public function getImageInfo(): mixed
     {
         if ($this->file->isFile()) {
-            return @getimagesize($this->file->getPathname());
+            return getimagesize($this->file->getPathname());
         }
         return false;
     }
