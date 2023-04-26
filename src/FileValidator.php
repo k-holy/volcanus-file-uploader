@@ -408,7 +408,7 @@ class FileValidator
         if ($maxWidth === null && $maxHeight === null) {
             return null;
         }
-        $imageInfo = $this->getImageInfo($file);
+        $imageInfo = $file->getImageInfo();
         if (is_array($imageInfo) && isset($imageInfo[0]) && isset($imageInfo[1])) {
             $width = $imageInfo[0];
             $height = $imageInfo[1];
@@ -449,26 +449,11 @@ class FileValidator
                 return exif_imagetype($filepath);
             }
         }
-        $imageInfo = $this->getImageInfo($file);
+        $imageInfo = $file->getImageInfo();
         if (is_array($imageInfo) && isset($imageInfo[2])) {
             return $imageInfo[2];
         }
         return false;
-    }
-
-    /**
-     * 指定されたファイルの画像情報を返します。
-     *
-     * @param FileInterface $file アップロードファイル
-     * @return array|false 配列またはFALSE
-     */
-    private function getImageInfo(FileInterface $file): mixed
-    {
-        $filepath = $file->getPath();
-        if ($filepath === null) {
-            return getimagesizefromstring($file->getContent());
-        }
-        return getimagesize($filepath);
     }
 
     /**
