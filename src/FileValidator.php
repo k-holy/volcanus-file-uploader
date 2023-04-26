@@ -410,9 +410,10 @@ class FileValidator
         if ($maxWidth === null && $maxHeight === null) {
             return null;
         }
-        $filepath = $file->getPath();
-        /** @noinspection PhpUnusedLocalVariableInspection */
-        if (false != (list($width, $height, $type, $attr) = getimagesize($filepath))) {
+        $imageInfo = $this->getImageInfo($file);
+        if (is_array($imageInfo) && isset($imageInfo[0]) && isset($imageInfo[1])) {
+            $width = $imageInfo[0];
+            $height = $imageInfo[1];
             if (!empty($maxWidth) && $width > $maxWidth) {
                 $this->errors['imageWidth'] = $width;
                 if ($throwExceptionOnValidate) {
@@ -432,7 +433,7 @@ class FileValidator
             return !(isset($this->errors['imageWidth']) || isset($this->errors['imageHeight']));
         }
         throw new \InvalidArgumentException(
-            sprintf('The filepath "%s" is invalid image.', $filepath)
+            sprintf('The file is invalid image. path:%s', $file->getPath())
         );
     }
 
@@ -440,27 +441,37 @@ class FileValidator
      * 指定されたファイルのImageType定数を返します。
      *
      * @param FileInterface $file アップロードファイル
-     * @return mixed 定数値またはFALSE
+     * @return int|false 定数値またはFALSE
      */
     private function getImageType(FileInterface $file)
     {
-        $filepath = $file->getPath();
-        if ($filepath === null) {
-            $content = $file->getContent();
-            /** @noinspection PhpUnusedLocalVariableInspection */
-            if ((list($width, $height, $type, $attr) = getimagesizefromstring($content))) {
-                return $type;
+        if ($this->config('enableExif')) {
+            $filepath = $file->getPath();
+            if ($filepath !== null) {
+                /** @noinspection PhpComposerExtensionStubsInspection */
+                return exif_imagetype($filepath);
             }
         }
-        if ($this->config('enableExif')) {
-            /** @noinspection PhpComposerExtensionStubsInspection */
-            return exif_imagetype($filepath);
-        }
-        /** @noinspection PhpUnusedLocalVariableInspection */
-        if ((list($width, $height, $type, $attr) = getimagesize($filepath))) {
-            return $type;
+        $imageInfo = $this->getImageInfo($file);
+        if (is_array($imageInfo) && isset($imageInfo[2])) {
+            return $imageInfo[2];
         }
         return false;
+    }
+
+    /**
+     * 指定されたファイルの画像情報を返します。
+     *
+     * @param FileInterface $file アップロードファイル
+     * @return array|false 配列またはFALSE
+     */
+    private function getImageInfo(FileInterface $file)
+    {
+        $filepath = $file->getPath();
+        if ($filepath === null) {
+            return getimagesizefromstring($file->getContent());
+        }
+        return getimagesize($filepath);
     }
 
     /**
