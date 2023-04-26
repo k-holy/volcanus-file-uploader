@@ -445,12 +445,19 @@ class FileValidator
     private function getImageType(FileInterface $file)
     {
         $filepath = $file->getPath();
+        if ($filepath === null) {
+            $content = $file->getContent();
+            /** @noinspection PhpUnusedLocalVariableInspection */
+            if ((list($width, $height, $type, $attr) = getimagesizefromstring($content))) {
+                return $type;
+            }
+        }
         if ($this->config('enableExif')) {
             /** @noinspection PhpComposerExtensionStubsInspection */
             return exif_imagetype($filepath);
         }
         /** @noinspection PhpUnusedLocalVariableInspection */
-        if (false != (list($width, $height, $type, $attr) = getimagesize($filepath))) {
+        if ((list($width, $height, $type, $attr) = getimagesize($filepath))) {
             return $type;
         }
         return false;
