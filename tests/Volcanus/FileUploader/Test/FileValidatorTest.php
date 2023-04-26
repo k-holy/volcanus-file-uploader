@@ -19,6 +19,7 @@ use Volcanus\FileUploader\Exception\ImageWidthException;
 use Volcanus\FileUploader\Exception\NotFoundException;
 use Volcanus\FileUploader\Exception\UploaderException;
 use Volcanus\FileUploader\File\FileInterface;
+use Volcanus\FileUploader\File\SplFile;
 use Volcanus\FileUploader\FileValidator;
 
 /**
@@ -629,11 +630,8 @@ class FileValidatorTest extends TestCase
             'allowableType' => 'jpeg,png',
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('png'));
+        $path = realpath(__DIR__ . '/Fixtures/this-is.png');
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertTrue($validator->validateExtension($file));
     }
@@ -642,21 +640,15 @@ class FileValidatorTest extends TestCase
     {
         $validator = new FileValidator();
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('jpg'));
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg');
+        $file = new SplFile(new \SplFileInfo($path));
 
         $validator->config('allowableType', 'jpeg,png');
 
         $this->assertTrue($validator->validateExtension($file));
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('jpeg'));
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpeg');
+        $file = new SplFile(new \SplFileInfo($path));
 
         $validator->config('allowableType', 'jpeg,png');
 
@@ -713,11 +705,8 @@ class FileValidatorTest extends TestCase
             'throwExceptionOnValidate' => true,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('gif'));
+        $path = realpath(__DIR__ . '/Fixtures/this-is.gif');// 180 * 180 gif
+        $file = new SplFile(new \SplFileInfo($path));
 
         $validator->validateExtension($file);
     }
@@ -729,36 +718,21 @@ class FileValidatorTest extends TestCase
             'throwExceptionOnValidate' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('gif'));
+        $path = realpath(__DIR__ . '/Fixtures/this-is.gif');// 180 * 180 gif
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertFalse($validator->validateExtension($file));
         $this->assertTrue($validator->hasError('extension'));
     }
 
-    public function testValidateImageTypeGif()
+    public function testValidateImageTypeGifFile()
     {
         $validator = new FileValidator([
             'enableExif' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('gif'));
-        $file->expects($this->once())
-            ->method('getMimeType')
-            ->will($this->returnValue('image/gif'));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.gif'))); // 180 * 180 gif
+        $path = realpath(__DIR__ . '/Fixtures/this-is.gif');// 180 * 180 gif
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertTrue($validator->validateImageType($file));
     }
@@ -769,20 +743,8 @@ class FileValidatorTest extends TestCase
             'enableExif' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('jpg'));
-        $file->expects($this->once())
-            ->method('getMimeType')
-            ->will($this->returnValue('image/jpeg'));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg');// 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertTrue($validator->validateImageType($file));
     }
@@ -793,22 +755,10 @@ class FileValidatorTest extends TestCase
             'enableExif' => true,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('jpg'));
-        $file->expects($this->once())
-            ->method('getMimeType')
-            ->will($this->returnValue('image/jpeg'));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg');// 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
-        $validator->validateImageType($file);
+        $this->assertTrue($validator->validateImageType($file));
     }
 
     public function testValidateImageTypeReturnNullWhenFileIsNotImage()
@@ -817,11 +767,8 @@ class FileValidatorTest extends TestCase
             'enableExif' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(false));
+        $path = realpath(__DIR__ . '/Fixtures/this-is-text.png'); // text
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertNull($validator->validateImageType($file));
     }
@@ -833,20 +780,8 @@ class FileValidatorTest extends TestCase
             'enableExif' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('gif'));
-        $file->expects($this->once())
-            ->method('getMimeType')
-            ->will($this->returnValue('image/jpeg'));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is-gif-not.jpg'); // gif
+        $file = new SplFile(new \SplFileInfo($path));
 
         $validator->validateImageType($file);
     }
@@ -935,14 +870,8 @@ class FileValidatorTest extends TestCase
             'maxHeight' => 180,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg'); // 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertTrue($validator->validateImageSize($file));
     }
@@ -954,11 +883,8 @@ class FileValidatorTest extends TestCase
             'maxHeight' => null,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg'); // 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertNull($validator->validateImageSize($file));
     }
@@ -970,11 +896,8 @@ class FileValidatorTest extends TestCase
             'maxHeight' => 180,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(false));
+        $path = realpath(__DIR__ . '/Fixtures/this-is-text.png'); // text
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertNull($validator->validateImageSize($file));
     }
@@ -988,14 +911,8 @@ class FileValidatorTest extends TestCase
             'throwExceptionOnValidate' => true,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg'); // 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $validator->validateImageSize($file);
     }
@@ -1008,14 +925,8 @@ class FileValidatorTest extends TestCase
             'throwExceptionOnValidate' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg'); // 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertFalse($validator->validateImageSize($file));
         $this->assertTrue($validator->hasError('imageWidth'));
@@ -1030,14 +941,8 @@ class FileValidatorTest extends TestCase
             'throwExceptionOnValidate' => true,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg'); // 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $validator->validateImageSize($file);
     }
@@ -1050,14 +955,8 @@ class FileValidatorTest extends TestCase
             'throwExceptionOnValidate' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg'); // 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertFalse($validator->validateImageSize($file));
         $this->assertTrue($validator->hasError('imageHeight'));
@@ -1071,14 +970,8 @@ class FileValidatorTest extends TestCase
             'throwExceptionOnValidate' => false,
         ]);
 
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getPath')
-            ->will($this->returnValue(realpath(__DIR__ . '/Fixtures/this-is.jpg'))); // 180 * 180 jpeg
+        $path = realpath(__DIR__ . '/Fixtures/this-is.jpg'); // 180 * 180 jpeg
+        $file = new SplFile(new \SplFileInfo($path));
 
         $this->assertFalse($validator->validateImageSize($file));
         $this->assertTrue($validator->hasError('imageWidth'));

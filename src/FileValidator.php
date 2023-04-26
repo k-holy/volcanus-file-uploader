@@ -443,6 +443,13 @@ class FileValidator
     private function getImageType(FileInterface $file): mixed
     {
         $filepath = $file->getPath();
+        if ($filepath === null) {
+            $content = $file->getContent();
+            /** @noinspection PhpUnusedLocalVariableInspection */
+            if ((list($width, $height, $type, $attr) = getimagesizefromstring($content))) {
+                return $type;
+            }
+        }
         if ($this->config('enableExif')) {
             return exif_imagetype($filepath);
         }
