@@ -189,6 +189,7 @@ class Psr7UploadedFileTest extends TestCase
         $moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
         $this->assertFileEquals($moved_path, $orig_path);
+        $this->assertFileDoesNotExist($temp_path);
     }
 
     public function testMoveRaiseExceptionWhenAlreadyExists()
