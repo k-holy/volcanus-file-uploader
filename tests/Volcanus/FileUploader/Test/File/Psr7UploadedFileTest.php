@@ -189,8 +189,7 @@ class Psr7UploadedFileTest extends TestCase
         $moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
         $this->assertFileEquals($moved_path, $orig_path);
-        // PSR-7 UploadedFile は StreamInterface も受け付けるため、ファイルパスを操作しない
-        $this->assertFileExists($temp_path);
+        $this->assertFileDoesNotExist($temp_path);
     }
 
     public function testMoveRaiseExceptionWhenAlreadyExists()
