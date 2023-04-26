@@ -112,9 +112,19 @@ class SymfonyFile implements FileInterface
      */
     public function isImage(): bool
     {
+        $imageInfo = $this->getImageInfo();
+        return (is_array($imageInfo) && isset($imageInfo[2]));
+    }
+
+    /**
+     * アップロードファイルの画像情報を返します。
+     *
+     * @return array|false アップロードファイルの画像情報またはfalse
+     */
+    public function getImageInfo(): mixed
+    {
         if ($this->file->isFile()) {
-            $imagesize = @getimagesize($this->file->getPathname());
-            return (isset($imagesize[2]));
+            return @getimagesize($this->file->getPathname());
         }
         return false;
     }

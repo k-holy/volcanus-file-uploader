@@ -137,9 +137,19 @@ class Psr7UploadedFile implements FileInterface
      */
     public function isImage(): bool
     {
+        $imageInfo = $this->getImageInfo();
+        return (is_array($imageInfo) && isset($imageInfo[2]));
+    }
+
+    /**
+     * アップロードファイルの画像情報を返します。
+     *
+     * @return array|false アップロードファイルの画像情報またはfalse
+     */
+    public function getImageInfo(): mixed
+    {
         if ($this->isValid()) {
-            $imagesize = @getimagesizefromstring($this->getBuffer());
-            return (isset($imagesize[2]));
+            return @getimagesizefromstring($this->getBuffer());
         }
         return false;
     }

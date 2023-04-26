@@ -73,6 +73,13 @@ interface FileInterface
     public function isImage(): bool;
 
     /**
+     * アップロードファイルの画像情報を返します。
+     *
+     * @return array|false アップロードファイルの画像情報またはfalse
+     */
+    public function getImageInfo(): mixed;
+
+    /**
      * アップロードファイルを指定されたディレクトリに移動し、移動先のファイルパスを返します。
      *
      * @param string $directory 移動先ディレクトリ
