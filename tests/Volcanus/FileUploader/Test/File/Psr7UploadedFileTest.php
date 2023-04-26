@@ -289,7 +289,7 @@ class Psr7UploadedFileTest extends TestCase
             new \RecursiveDirectoryIterator($this->tempDir)
         );
         foreach ($it as $file) {
-            if ($file->isFile() && $file->getBaseName() !== '.gitignore') {
+            if ($file->isFile() && $file->getBaseName() !== '.gitignore' && $file->getBaseName() !== '.gitkeep') {
                 unlink($file);
             }
         }
