@@ -189,6 +189,7 @@ class Psr7UploadedFileTest extends TestCase
         $moved_path = $file->move($this->tempDir, uniqid(mt_rand(), true) . '.jpg');
 
         $this->assertFileEquals($moved_path, $orig_path);
+        $this->assertFileDoesNotExist($temp_path);
     }
 
     public function testMoveRaiseExceptionWhenAlreadyExists()
@@ -289,7 +290,7 @@ class Psr7UploadedFileTest extends TestCase
             new \RecursiveDirectoryIterator($this->tempDir)
         );
         foreach ($it as $file) {
-            if ($file->isFile() && $file->getBaseName() !== '.gitignore') {
+            if ($file->isFile() && $file->getBaseName() !== '.gitignore' && $file->getBaseName() !== '.gitkeep') {
                 unlink($file);
             }
         }
