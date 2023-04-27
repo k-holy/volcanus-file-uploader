@@ -154,8 +154,14 @@ class Uploader
      */
     public function move(FileInterface $file): string
     {
-        $moveDirectory = $this->config('moveDirectory');
-        $moveRetry = $this->config('moveRetry');
+        $moveDirectory = (string)$this->config('moveDirectory');
+        if (!isset($moveDirectory) || strlen($moveDirectory) === 0) {
+            throw new UploaderException('moveDirectory is not specified.');
+        }
+        $moveRetry = (int)$this->config('moveRetry');
+        if (!isset($moveRetry) || $moveRetry === 0) {
+            throw new UploaderException('moveRetry is not specified.');
+        }
         if ($file->isValid()) {
             $this->prepareMove($moveDirectory);
             $extension = $file->getClientExtension();
