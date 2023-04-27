@@ -10,11 +10,16 @@ namespace Volcanus\FileUploader\Test;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Volcanus\FileUploader\Exception\ExtensionException;
+use Volcanus\FileUploader\Exception\FilenameException;
+use Volcanus\FileUploader\Exception\FilesizeException;
+use Volcanus\FileUploader\Exception\ImageHeightException;
+use Volcanus\FileUploader\Exception\ImageTypeException;
+use Volcanus\FileUploader\Exception\ImageWidthException;
 use Volcanus\FileUploader\Exception\UploaderException;
-use Volcanus\FileUploader\File\FileInterface;
+use Volcanus\FileUploader\File\NativeFile;
 use Volcanus\FileUploader\FileValidator;
 use Volcanus\FileUploader\Uploader;
-use Volcanus\FileUploader\Exception\FilepathException;
 
 /**
  * Test for Volcanus\FileUploader\Uploader
@@ -23,6 +28,59 @@ use Volcanus\FileUploader\Exception\FilepathException;
  */
 class UploaderTest extends TestCase
 {
+
+    private $tempDir;
+
+    public function setUp(): void
+    {
+        $this->tempDir = __DIR__ . DIRECTORY_SEPARATOR . 'temp';
+    }
+
+    public function tearDown(): void
+    {
+        $this->cleanTemp();
+    }
+
+    private function cleanTemp()
+    {
+        $it = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->tempDir)
+        );
+        foreach ($it as $file) {
+            if ($file->isFile() && $file->getBaseName() !== '.gitignore' && $file->getBaseName() !== '.gitkeep') {
+                unlink($file);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param string $filePath
+     * @param array $files
+     * @return NativeFile
+     */
+    private function copyFile(string $filePath, array $files = []): NativeFile
+    {
+        $basename = basename($filePath);
+        $copiedFile = $this->tempDir . DIRECTORY_SEPARATOR . $basename;
+        copy($filePath, $copiedFile);
+        if (!array_key_exists('tmp_name', $files)) {
+            $files['tmp_name'] = $copiedFile;
+        }
+        if (!array_key_exists('name', $files)) {
+            $files['name'] = $basename;
+        }
+        return new NativeFile($files);
+    }
+
+    /**
+     * @param array|\ArrayAccess $configurations
+     * @return FileValidator
+     */
+    private function createValidator($configurations): FileValidator
+    {
+        return new FileValidator($configurations);
+    }
 
     public function testConfigRaiseExceptionWhenMoveRetryIsNotDigit()
     {
@@ -62,12 +120,12 @@ class UploaderTest extends TestCase
 
     public function testValidateCallClearErrors()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
 
         /** @var $validator FileValidator|MockObject */
         $validator = $this->createMock(FileValidator::class);
-
         $validator->expects($this->once())
             ->method('clearErrors');
 
@@ -78,12 +136,12 @@ class UploaderTest extends TestCase
 
     public function testValidateCallValidateUploadError()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
+        $file = $this->copyFile(
+            realpath(__DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg')
+        );
 
         /** @var $validator FileValidator|MockObject */
         $validator = $this->createMock(FileValidator::class);
-
         $validator->expects($this->once())
             ->method('validateUploadError')
             ->will($this->returnValue(true));
@@ -95,20 +153,17 @@ class UploaderTest extends TestCase
 
     public function testValidateCallValidateFilenameWhenConfigHasFilenameEncoding()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
+        $this->expectException(FilenameException::class);
 
-        /** @var $validator FileValidator|MockObject */
-        $validator = $this->createMock(FileValidator::class);
+        $file = $this->copyFile(
+            realpath(__DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'),
+            ['name' => "\0xfc\xbf\xbf\xbf\xbf\xbf" . '.jpg']
+        );
 
-        $validator->expects($this->at(2))
-            ->method('config')
-            ->with($this->identicalTo('filenameEncoding'))
-            ->will($this->returnValue('UTF-8'));
-
-        $validator->expects($this->once())
-            ->method('validateFilename')
-            ->will($this->returnValue(true));
+        $validator = $this->createValidator([
+            'filenameEncoding' => 'UTF-8',
+            'throwExceptionOnValidate' => true,
+        ]);
 
         $uploader = new Uploader();
 
@@ -117,20 +172,16 @@ class UploaderTest extends TestCase
 
     public function testValidateCallValidateFilesizeWhenConfigHasMaxFilesize()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
+        $this->expectException(FilesizeException::class);
 
-        /** @var $validator FileValidator|MockObject */
-        $validator = $this->createMock(FileValidator::class);
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
 
-        $validator->expects($this->at(3))
-            ->method('config')
-            ->with($this->identicalTo('maxFilesize'))
-            ->will($this->returnValue('1M'));
-
-        $validator->expects($this->once())
-            ->method('validateFilesize')
-            ->will($this->returnValue(true));
+        $validator = $this->createValidator([
+            'maxFilesize' => $file->getSize() - 1,
+            'throwExceptionOnValidate' => true,
+        ]);
 
         $uploader = new Uploader();
 
@@ -139,20 +190,16 @@ class UploaderTest extends TestCase
 
     public function testValidateCallValidateExtensionWhenConfigHasAllowableType()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
+        $this->expectException(ExtensionException::class);
 
-        /** @var $validator FileValidator|MockObject */
-        $validator = $this->createMock(FileValidator::class);
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
 
-        $validator->expects($this->at(4))
-            ->method('config')
-            ->with($this->identicalTo('allowableType'))
-            ->will($this->returnValue('jpg'));
-
-        $validator->expects($this->once())
-            ->method('validateExtension')
-            ->will($this->returnValue(true));
+        $validator = $this->createValidator([
+            'allowableType' => 'png',
+            'throwExceptionOnValidate' => true,
+        ]);
 
         $uploader = new Uploader();
 
@@ -161,18 +208,15 @@ class UploaderTest extends TestCase
 
     public function testValidateCallValidateImageTypeWhenFileIsImage()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
+        $this->expectException(ImageTypeException::class);
 
-        /** @var $validator FileValidator|MockObject */
-        $validator = $this->createMock(FileValidator::class);
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is-gif-not.jpg'
+        );
 
-        $validator->expects($this->once())
-            ->method('validateImageType')
-            ->will($this->returnValue(true));
+        $validator = $this->createValidator([
+            'throwExceptionOnValidate' => true,
+        ]);
 
         $uploader = new Uploader();
 
@@ -181,23 +225,19 @@ class UploaderTest extends TestCase
 
     public function testValidateCallValidateImageSizeWhenFileIsImageAndConfigHasMaxWidth()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
+        $this->expectException(ImageWidthException::class);
 
-        /** @var $validator FileValidator|MockObject */
-        $validator = $this->createMock(FileValidator::class);
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
 
-        $validator->expects($this->at(6))
-            ->method('config')
-            ->with($this->identicalTo('maxWidth'))
-            ->will($this->returnValue(180));
+        list($width, $height) = getimagesize($file->getPath());
 
-        $validator->expects($this->once())
-            ->method('validateImageSize')
-            ->will($this->returnValue(true));
+        $validator = $this->createValidator([
+            'maxWidth' => $width - 1,
+            'maxHeight' => $height,
+            'throwExceptionOnValidate' => true,
+        ]);
 
         $uploader = new Uploader();
 
@@ -206,23 +246,19 @@ class UploaderTest extends TestCase
 
     public function testValidateCallValidateImageSizeWhenFileIsImageAndConfigHasMaxHeight()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isImage')
-            ->will($this->returnValue(true));
+        $this->expectException(ImageHeightException::class);
 
-        /** @var $validator FileValidator|MockObject */
-        $validator = $this->createMock(FileValidator::class);
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
 
-        $validator->expects($this->at(7))
-            ->method('config')
-            ->with($this->identicalTo('maxHeight'))
-            ->will($this->returnValue(180));
+        list($width, $height) = getimagesize($file->getPath());
 
-        $validator->expects($this->once())
-            ->method('validateImageSize')
-            ->will($this->returnValue(true));
+        $validator = $this->createValidator([
+            'maxWidth' => $width,
+            'maxHeight' => $height - 1,
+            'throwExceptionOnValidate' => true,
+        ]);
 
         $uploader = new Uploader();
 
@@ -231,65 +267,34 @@ class UploaderTest extends TestCase
 
     public function testMove()
     {
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isValid')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('jpg'));
-        $file->expects($this->once())
-            ->method('move')
-            ->will($this->returnCallback(function ($directory, $filename) {
-                return $directory . '/' . $filename;
-            }));
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
 
         $uploader = new Uploader([
-            'moveDirectory' => __DIR__,
+            'moveDirectory' => $this->tempDir,
             'moveRetry' => 1,
         ]);
 
-        $moved_path = $uploader->move($file);
+        $movedPath = $uploader->move($file);
 
-        $this->assertMatchesRegularExpression('~/[a-f0-9]{40}\.jpg\z~i', $moved_path);
-    }
-
-    public function testMoveRaiseExceptionWhenFileIsNotValid()
-    {
-        $this->expectException(UploaderException::class);
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isValid')
-            ->will($this->returnValue(false));
-
-        $uploader = new Uploader([
-            'moveDirectory' => __DIR__,
-            'moveRetry' => 1,
-        ]);
-
-        $uploader->move($file);
+        $this->assertFileDoesNotExist($file->getPath());
+        $this->assertFileExists($movedPath);
     }
 
     public function testMoveRaiseExceptionWhenAllRetryFailed()
     {
         $this->expectException(UploaderException::class);
-        /** @var $file FileInterface|MockObject */
-        $file = $this->createMock(FileInterface::class);
-        $file->expects($this->once())
-            ->method('isValid')
-            ->will($this->returnValue(true));
-        $file->expects($this->once())
-            ->method('getClientExtension')
-            ->will($this->returnValue('jpg'));
-        $file->expects($this->any())
-            ->method('move')
-            ->will($this->throwException(new FilepathException()));
+
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
+
+        unlink($file->getPath());
 
         $uploader = new Uploader([
-            'moveDirectory' => __DIR__,
-            'moveRetry' => 3,
+            'moveDirectory' => $this->tempDir,
+            'moveRetry' => 1,
         ]);
 
         $uploader->move($file);
