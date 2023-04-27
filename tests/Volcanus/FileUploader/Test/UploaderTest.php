@@ -282,6 +282,42 @@ class UploaderTest extends TestCase
         $this->assertFileExists($movedPath);
     }
 
+    public function testMoveRaiseExceptionWhenMoveDirectoryIsNotSpecified()
+    {
+        $this->expectException(UploaderException::class);
+
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
+
+        unlink($file->getPath());
+
+        $uploader = new Uploader([
+            'moveDirectory' => null,
+            'moveRetry' => 1,
+        ]);
+
+        $uploader->move($file);
+    }
+
+    public function testMoveRaiseExceptionWhenMoveRetryIsNotSpecified()
+    {
+        $this->expectException(UploaderException::class);
+
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
+
+        unlink($file->getPath());
+
+        $uploader = new Uploader([
+            'moveDirectory' => $this->tempDir,
+            'moveRetry' => null,
+        ]);
+
+        $uploader->move($file);
+    }
+
     public function testMoveRaiseExceptionWhenAllRetryFailed()
     {
         $this->expectException(UploaderException::class);
