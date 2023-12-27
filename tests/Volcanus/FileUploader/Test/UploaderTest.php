@@ -337,4 +337,34 @@ class UploaderTest extends TestCase
         $uploader->move($file);
     }
 
+    public function testGetFilepathExceptions()
+    {
+        $this->expectException(UploaderException::class);
+
+        $file = $this->copyFile(
+            __DIR__ . DIRECTORY_SEPARATOR . 'Fixtures' . DIRECTORY_SEPARATOR . 'this-is.jpg'
+        );
+
+        unlink($file->getPath());
+
+        $uploader = new Uploader([
+            'moveDirectory' => $this->tempDir,
+            'moveRetry' => 1,
+        ]);
+
+        $uploader->move($file);
+
+        $filepathExceptions = $uploader->getFilepathExceptions();
+        $this->assertNotEmpty($filepathExceptions);
+
+        $filePathException = $filepathExceptions[0];
+        $this->assertStringStartsWith('The file could not move', $filePathException->getMessage());
+
+        $uploader->initialize([
+            'moveDirectory' => $this->tempDir,
+            'moveRetry' => 1,
+        ]);
+        $this->assertEmpty($uploader->getFilepathExceptions());
+    }
+
 }
