@@ -30,6 +30,11 @@ class Uploader
     private array $config;
 
     /**
+     * @var array moveメソッド実行時のファイルパス例外
+     */
+    private array $filepathExceptions = [];
+
+    /**
      * コンストラクタ
      *
      * @param array|\ArrayAccess $configurations 設定オプション
@@ -55,6 +60,7 @@ class Uploader
                 $this->config($name, $value);
             }
         }
+        $this->filepathExceptions = [];
         return $this;
     }
 
@@ -172,7 +178,8 @@ class Uploader
                 }
                 try {
                     return $file->move($moveDirectory, $filename);
-                } catch (FilepathException) {
+                } catch (FilepathException $e) {
+                    $this->filepathExceptions[] = $e;
                 }
                 $moveRetry--;
             }
@@ -180,6 +187,16 @@ class Uploader
         throw new UploaderException(
             sprintf('A temporary file was not able to be created in %s.', $moveDirectory)
         );
+    }
+
+    /**
+     * moveメソッド実行時に発生したファイルパス例外を返します。
+     *
+     * @return FilepathException[]
+     */
+    public function getFilepathExceptions(): array
+    {
+        return $this->filepathExceptions;
     }
 
     /**
