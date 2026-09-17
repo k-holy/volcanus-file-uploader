@@ -160,6 +160,20 @@ class NativeFileTest extends TestCase
 
     }
 
+    public function testIsImageSuppressNoticeEmptyFile()
+    {
+        $path = realpath(__DIR__ . '/../Fixtures/this-is-empty.txt');
+
+        $file = new NativeFile([
+            'tmp_name' => $path,
+            'name' => 'テスト.txt',
+            'error' => \UPLOAD_ERR_OK,
+        ]);
+
+        $this->assertFalse($file->isImage());
+
+    }
+
     public function testMove()
     {
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');

@@ -167,7 +167,16 @@ class NativeFile implements FileInterface
      */
     public function isImage(): bool
     {
+        // 空のファイル等で警告が発生する可能性があるため、エラー検出レベルを一時的に変更して対応する
+        $errorLevel = error_reporting();
+        $errorLevelChanged = ($errorLevel & E_NOTICE);
+        if ($errorLevelChanged) {
+            error_reporting($errorLevel ^ E_NOTICE);
+        }
         $imageInfo = $this->getImageInfo();
+        if ($errorLevelChanged) {
+            error_reporting($errorLevel);
+        }
         return (is_array($imageInfo) && isset($imageInfo[2]));
     }
 
