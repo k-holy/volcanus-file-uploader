@@ -173,6 +173,22 @@ class Psr7UploadedFileTest extends TestCase
 
     }
 
+    public function testIsImageSuppressNoticeEmptyFile()
+    {
+        $path = realpath(__DIR__ . '/../Fixtures/this-is-empty.txt');
+
+        $file = new Psr7UploadedFile(
+            new UploadedFile(
+                $path,
+                filesize($path),
+                \UPLOAD_ERR_OK
+            )
+        );
+
+        $this->assertFalse($file->isImage());
+
+    }
+
     public function testMove()
     {
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');

@@ -176,6 +176,24 @@ class SymfonyFileTest extends TestCase
 
     }
 
+    public function testIsImageSuppressNoticeEmptyFile()
+    {
+        $path = realpath(__DIR__ . '/../Fixtures/this-is-empty.txt');
+
+        $file = new SymfonyFile(
+            new UploadedFile(
+                $path,
+                'テスト.txt',
+                null,
+                \UPLOAD_ERR_OK,
+                true
+            )
+        );
+
+        $this->assertFalse($file->isImage());
+
+    }
+
     public function testMove()
     {
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');

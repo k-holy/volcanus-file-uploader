@@ -153,6 +153,20 @@ class SplFileTest extends TestCase
 
     }
 
+    public function testIsImageSuppressNoticeEmptyFile()
+    {
+        $path = realpath(__DIR__ . '/../Fixtures/this-is-empty.txt');
+
+        $file = new SplFile(
+            new \SplFileInfo($path),
+            'テスト.txt',
+            \UPLOAD_ERR_OK
+        );
+
+        $this->assertFalse($file->isImage());
+
+    }
+
     public function testMove()
     {
         $orig_path = realpath(__DIR__ . '/../Fixtures/this-is.jpg');
